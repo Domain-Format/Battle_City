@@ -795,9 +795,19 @@
                                 if (pData) {
                                     document.getElementById(`p${i}-name`).textContent = pData.name;
                                     document.getElementById(`p${i}-placeholder`).querySelector('span').textContent = 'Connecting...';
+                                    
+                                    // Apply flipped state if they were already flipped before we joined
+                                    isFlipped[i] = pData.isFlipped || false;
+                                    const videoEl = document.getElementById(`p${i}-video`);
+                                    if (videoEl) videoEl.style.transform = isFlipped[i] ? 'scaleX(1) scaleY(-1)' : 'scaleX(1) scaleY(1)';
                                 } else {
                                     document.getElementById(`p${i}-name`).textContent = `P${i}`;
                                     document.getElementById(`p${i}-placeholder`).querySelector('span').textContent = `Awaiting P${i}...`;
+                                    
+                                    // Reset flip state for empty seats
+                                    isFlipped[i] = false;
+                                    const videoEl = document.getElementById(`p${i}-video`);
+                                    if (videoEl) videoEl.style.transform = 'scaleX(1) scaleY(1)';
                                 }
                             } else {
                                 item.classList.add('hidden');
@@ -856,6 +866,13 @@
                 socket.on('sync-layout', (layoutPositions) => {
                     playerGridPositions = layoutPositions;
                     randomizeSeats(false); 
+                });
+
+                // Sync Remote Camera Flips
+                socket.on('camera-flipped', (data) => {
+                    isFlipped[data.seat] = data.isFlipped;
+                    const videoEl = document.getElementById(`p${data.seat}-video`);
+                    if (videoEl) videoEl.style.transform = isFlipped[data.seat] ? 'scaleX(1) scaleY(-1)' : 'scaleX(1) scaleY(1)';
                 });
 
                 socket.on('webrtc-offer', async (data) => {
@@ -956,6 +973,10 @@
             if (videoEl) {
                 videoEl.srcObject = null;
                 videoEl.classList.add('hidden');
+                
+                // Reset flip state
+                isFlipped[seat] = false;
+                videoEl.style.transform = 'scaleX(1) scaleY(1)';
             }
             if (placeholder) {
                 placeholder.classList.remove('hidden');
@@ -1084,8 +1105,8 @@
                 videoEl.muted = true; // DO NOT HEAR YOURSELF
                 videoEl.autoplay = true;
                 
-                // Apply flip settings without any automatic mirroring
-                videoEl.style.transform = isFlipped[mySeat] ? 'scaleY(-1)' : 'none';
+                // Force scaleX(1) to completely disable the browser's default horizontal mirroring!
+                videoEl.style.transform = isFlipped[mySeat] ? 'scaleX(1) scaleY(-1)' : 'scaleX(1) scaleY(1)';
                 
                 videoEl.classList.remove('hidden');
                 placeholder.classList.add('hidden');
@@ -1171,9 +1192,7 @@
                     
                     if (localStream) {
                         localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
-                        localStream.addTrack(newVideoTrack);
-                        
-                        Object.values(peerConnections).forEach(pc => {
+                                Object.values(peerConnections).forEach(pc => {
                             const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
                             if (sender) sender.replaceTrack(newVideoTrack);
                         });
@@ -1183,6 +1202,8 @@
                     
                     videoEl.srcObject = null;
                     videoEl.srcObject = localStream;
+                    // Re-enforce the unmirrored state when turning the camera back on
+                    videoEl.style.transform = isFlipped[mySeat] ? 'scaleX(1) scaleY(-1)' : 'scaleX(1) scaleY(1)';
                     isCamOn = true;
                     
                     document.getElementById('cam-icon-on').classList.remove('hidden');
@@ -1203,7 +1224,12 @@
             isFlipped[playerNum] = !isFlipped[playerNum];
             
             const videoEl = document.getElementById(`p${playerNum}-video`);
-            if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleY(-1)' : 'none';
+            if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleX(1) scaleY(-1)' : 'scaleX(1) scaleY(1)';
+            
+            // Broadcast flip state to the rest of the room
+            if (socket && currentRoomId) {
+                socket.emit('flip-camera', currentRoomId, isFlipped[playerNum]);
+            }
         }
 
         // --- Interaction Locking ---
