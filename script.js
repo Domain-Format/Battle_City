@@ -1,4 +1,3 @@
- <script>
         // --- Core State ---
         let totalPlayers = 4;
         let mySeat = null; 
@@ -958,4 +957,3 @@
             if (socket && currentRoomId) socket.emit('send-chat', currentRoomId, { seat: mySeat || 1, msg: escapedMsg });
             input.value = ''; input.focus();
         }
-    </script>
