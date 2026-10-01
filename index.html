@@ -1517,7 +1517,33 @@
 
         function selectDMCard(card) {
             if(!targetDMPlayer) return;
+            
+            // 1. Update the local UI instantly
+            const imgEl = document.getElementById(`p${targetDMPlayer}-dm-img`);
+            const containerEl = document.getElementById(`p${targetDMPlayer}-dm-container`);
+            
+            if (imgEl && containerEl) {
+                imgEl.src = `https://images.ygoprodeck.com/images/cards_cropped/${card.id}.jpg`;
+                imgEl.onerror = function() { this.src = card.card_images[0].image_url_small; };
+                containerEl.classList.remove('hidden');
+                
+                dmCounts[targetDMPlayer] = 0;
+                document.getElementById(`p${targetDMPlayer}-dm-counter`).textContent = '0';
+                
+                let pColor = 'text-blue-400';
+                if(targetDMPlayer === 2) pColor = 'text-red-500';
+                if(targetDMPlayer === 3) pColor = 'text-yellow-400';
+                if(targetDMPlayer === 4) pColor = 'text-purple-400';
+                if(targetDMPlayer === 5) pColor = 'text-orange-500';
+                if(targetDMPlayer === 6) pColor = 'text-pink-500';
+
+                addLog(`P${targetDMPlayer}`, `set <span class="font-bold ${pColor} drop-shadow-sm">${card.name}</span> as their Deck Master!`, 'text-amber-200');
+            }
+
+            // 2. Tell the server to broadcast this to everyone else
             if (socket && currentRoomId) socket.emit('set-dm-card', currentRoomId, { seat: targetDMPlayer, card: card });
+            
+            // 3. Close the modal
             closeDMSearch();
         }
 
