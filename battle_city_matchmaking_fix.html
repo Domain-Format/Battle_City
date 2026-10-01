@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BATTLE CITY!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* zinc-950 */
+            color: #f4f4f5; /* zinc-100 */
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Teko', sans-serif;
+        }
+
+        .log-container {
+            scrollbar-width: thin;
+            scrollbar-color: #3f3f46 transparent;
+        }
+        
+        .log-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .log-container::-webkit-scrollbar-thumb {
+            background-color: #3f3f46;
+            border-radius: 10px;
+        }
+
+        @keyframes toss-spin {
+            0% { transform: translateY(0) scale(1) rotateX(0) rotateY(0) rotateZ(0); }
+            50% { transform: translateY(-80px) scale(1.3) rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
+            100% { transform: translateY(0) scale(1) rotateX(1440deg) rotateY(720deg) rotateZ(360deg); }
+        }
+        
+        .animate-toss {
+            animation: toss-spin 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .lp-text {
+            font-size: 2.5rem;
+            line-height: 1;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .video-container {
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Hide number input arrows */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Camera Menu Dropdown dynamic positioning */
+        .top-1 .cam-menu-dropdown { top: 100%; bottom: auto; margin-top: 0.5rem; }
+        .bottom-1 .cam-menu-dropdown { bottom: 100%; top: auto; margin-bottom: 0.5rem; }
+        .left-1 .cam-menu-dropdown { left: 0; right: auto; }
+        .right-1 .cam-menu-dropdown { right: 0; left: auto; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Room Setup & Lobby Modal -->
+    <div id="setup-modal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] w-full max-w-5xl overflow-hidden flex flex-col md:flex-row transform transition-all max-h-[90vh]">
+            
+            <!-- LEFT PANEL: PUBLIC LOBBY -->
+            <div class="w-full md:w-7/12 flex flex-col border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950">
+                <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 shrink-0">
+                    <h2 class="font-display text-3xl text-cyan-400 uppercase tracking-widest flex items-center gap-2 m-0 leading-none">
+                        <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        Public Lobby
+                    </h2>
+                    <button onclick="if(socket) socket.emit('request-lobby-update')" class="text-zinc-400 hover:text-cyan-400 transition" title="Refresh Rooms">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>
+                
+                <!-- Format Filter -->
+                <div class="px-4 py-3 border-b border-zinc-800 bg-zinc-950 flex flex-wrap gap-2 shrink-0" id="lobby-filters">
+                    <button onclick="filterLobby('All')" class="filter-btn active shrink-0 px-3 py-1 rounded border border-zinc-700 bg-zinc-800 text-zinc-300 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 transition">All Formats</button>
+                    <button onclick="filterLobby('Advanced')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Advanced</button>
+                    <button onclick="filterLobby('Genesys')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Genesys</button>
+                    <button onclick="filterLobby('Domain')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Domain</button>
+                    <button onclick="filterLobby('Time Wizard')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Time Wizard</button>
+                    <button onclick="filterLobby('Custom')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Custom</button>
+                </div>
+                
+                <!-- Room List -->
+                <div class="flex-1 overflow-y-auto log-container p-4 flex flex-col gap-3" id="lobby-room-list">
+                    <div class="text-zinc-500 italic text-center p-4 mt-10">
+                        <svg class="animate-spin h-8 w-8 text-cyan-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Connecting to Matchmaker Server...
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: CREATE ROOM -->
+            <div class="w-full md:w-5/12 flex flex-col bg-zinc-900">
+                <div class="p-6 border-b border-zinc-800 text-center bg-zinc-950/30 shrink-0">
+                    <h1 class="font-display text-5xl tracking-wider text-cyan-400 uppercase drop-shadow-lg leading-none flex items-center justify-center gap-3">
+                        <svg class="w-10 h-10 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/>
+                        </svg>
+                        HOST ROOM
+                    </h1>
+                </div>
+                
+                <div class="p-6 flex flex-col gap-6 overflow-y-auto log-container">
+                    <!-- Authentication -->
+                    <div class="flex flex-col gap-3">
+                        <button id="yugipass-login-btn" onclick="simulateYugiPassLogin()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-100 font-bold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-3 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                            Login with YugiPass
+                        </button>
+                        
+                        <div id="yugipass-user-profile" class="hidden w-full bg-zinc-950 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)] rounded-lg p-3 flex items-center gap-3 transition-all">
+                            <img id="yp-avatar" src="" class="w-10 h-10 rounded-full border border-indigo-500/50 bg-zinc-900 object-cover">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[10px] text-indigo-400 uppercase tracking-widest font-bold flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    Authenticated
+                                </div>
+                                <div id="yp-username" class="text-white font-bold truncate text-sm"></div>
+                            </div>
+                            <button onclick="logoutYugiPass()" class="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/50 px-2 py-1.5 border border-red-900/50 rounded transition">Logout</button>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <hr class="flex-1 border-zinc-800">
+                            <span class="text-zinc-500 text-xs uppercase tracking-widest font-semibold">Or</span>
+                            <hr class="flex-1 border-zinc-800">
+                        </div>
+
+                        <div>
+                            <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Guest Duelist Name</label>
+                            <input type="text" id="setup-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="e.g. Seto Kaiba" value="Player 1">
+                        </div>
+                    </div>
+
+                    <!-- Format & Players -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Format</label>
+                            <select id="setup-format" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner">
+                                <option value="Advanced">Advanced</option>
+                                <option value="Time Wizard">Time Wizard</option>
+                                <option value="Domain" selected>Domain</option>
+                                <option value="Genesys">Genesys</option>
+                                <option value="Custom">Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Duelists</label>
+                            <select id="setup-players" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner">
+                                <option value="2">2 Players</option>
+                                <option value="3">3 Players</option>
+                                <option value="4" selected>4 Players</option>
+                                <option value="5">5 Players</option>
+                                <option value="6">6 Players</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="flex flex-col gap-4 bg-zinc-950/50 p-4 rounded-lg border border-zinc-800 shadow-inner">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" id="setup-private" class="w-5 h-5 text-cyan-500 bg-zinc-900 border-zinc-700 rounded focus:ring-cyan-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 transition">
+                            <span class="text-zinc-300 text-sm font-semibold group-hover:text-white transition">Private Room (Invite Only)</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" id="setup-spectators" checked class="w-5 h-5 text-cyan-500 bg-zinc-900 border-zinc-700 rounded focus:ring-cyan-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 transition">
+                            <span class="text-zinc-300 text-sm font-semibold group-hover:text-white transition">Allow Spectators</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="p-5 border-t border-zinc-800 bg-zinc-950/80 flex justify-end shrink-0">
+                    <button onclick="launchRoom()" class="w-full bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 text-cyan-50 font-bold py-3 px-8 rounded-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] transition text-sm tracking-widest uppercase hover:scale-105 transform">
+                        Initialize Room
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-zinc-900 border-b border-zinc-800 p-3 flex justify-between items-center shadow-lg shrink-0">
+        <div class="flex items-center gap-3">
+            <svg class="w-7 h-7 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/>
+            </svg>
+            <h1 class="font-display text-2xl tracking-wider text-cyan-400 uppercase">BATTLE CITY!</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="leave-room-btn" onclick="leaveRoom()" class="bg-red-900/80 hover:bg-red-800 border border-red-500/50 text-red-100 p-1.5 rounded shadow-[0_0_10px_rgba(220,38,38,0.3)] transition text-sm flex items-center justify-center gap-1 uppercase tracking-widest font-bold" title="Leave Room">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+            <button id="randomize-btn" onclick="randomizeSeats()" class="bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-500/50 text-indigo-100 p-1.5 rounded shadow-[0_0_10px_rgba(99,102,241,0.3)] transition" title="Randomize Player Seats">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg>
+            </button>
+            <button id="start-duel-btn" onclick="startDuelTimer()" class="bg-cyan-700 hover:bg-cyan-600 border border-cyan-500 text-cyan-100 font-bold py-1.5 px-4 rounded shadow-[0_0_10px_rgba(6,182,212,0.5)] transition text-sm tracking-widest uppercase animate-pulse">DUEL!</button>
+            <div class="text-lg text-zinc-400 font-mono font-bold w-24 text-right" id="duel-timer">00:00:00</div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row p-2 gap-2 overflow-hidden h-full min-h-0 relative">
+        
+        <!-- Dynamic Video Grid -->
+        <div id="video-grid" class="flex-1 grid grid-cols-2 grid-rows-2 gap-0 min-h-0 h-full p-0 bg-black">
+            
+            <!-- Player 1 (Local) -->
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-1">
+                <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p1-container">
+                    
+                    <!-- Aspect Ratio Sizer (16:9) forces the container to snap to the camera shape -->
+                    <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
+
+                    <!-- Combined Floating Name & LP -->
+                    <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p1-lp-wrapper">
+                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <img id="p1-dm-img" src="" class="hidden w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P1</h2>
+                                    </div>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-1" onclick="toggleMenu(1)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        </button>
+                                        <div id="cam-menu-1" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
+                                            <button onclick="toggleMic(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
+                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
+                                            </button>
+                                            <button onclick="toggleCam(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
+                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
+                                            </button>
+                                            <button onclick="toggleFlip(1); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                            </button>
+                                            <button onclick="openDMSearch(1); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="font-display text-5xl text-blue-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(96,165,250,0.8)] pointer-events-none" id="p1-lp">8000</div>
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                    <div id="p1-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <video id="local-video" class="absolute inset-0 w-full h-full object-contain transition-transform duration-300" style="transform: scaleX(-1);" autoplay playsinline muted></video>
+                    
+                    <div id="cam-error-message" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-10 pointer-events-none">
+                        <svg class="w-6 h-6 text-red-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                        </svg>
+                        <span class="text-red-400 font-mono text-xs" id="cam-error-text">Cam Error</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player 2 -->
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-2">
+                <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p2-container">
+                    
+                    <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
+
+                    <!-- Combined Floating Name & LP -->
+                    <div class="absolute bottom-1 left-1 z-20 transition-all duration-300 ease-out" id="p2-lp-wrapper">
+                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <img id="p2-dm-img" src="" class="hidden w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P2</h2>
+                                    </div>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-2" onclick="toggleMenu(2)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        </button>
+                                        <div id="cam-menu-2" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
+                                            <button onclick="toggleFlip(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                            </button>
+                                            <button onclick="openDMSearch(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="font-display text-5xl text-red-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] pointer-events-none" id="p2-lp">8000</div>
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                    <div id="p2-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <video id="p2-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
+                    
+                    <div id="p2-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P2...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player 3 -->
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-3">
+                <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p3-container">
+                    
+                    <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
+
+                    <!-- Combined Floating Name & LP -->
+                    <div class="absolute top-1 right-1 z-20 transition-all duration-300 ease-out" id="p3-lp-wrapper">
+                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <img id="p3-dm-img" src="" class="hidden w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P3</h2>
+                                    </div>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-3" onclick="toggleMenu(3)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        </button>
+                                        <div id="cam-menu-3" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
+                                            <button onclick="toggleFlip(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                            </button>
+                                            <button onclick="openDMSearch(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="font-display text-5xl text-yellow-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] pointer-events-none" id="p3-lp">8000</div>
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                    <div id="p3-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <video id="p3-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
+                    
+                    <div id="p3-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P3...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player 4 -->
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-4">
+                <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p4-container">
+                    
+                    <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
+
+                    <!-- Combined Floating Name & LP -->
+                    <div class="absolute top-1 left-1 z-20 transition-all duration-300 ease-out" id="p4-lp-wrapper">
+                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <img id="p4-dm-img" src="" class="hidden w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P4</h2>
+                                    </div>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-4" onclick="toggleMenu(4)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        </button>
+                                        <div id="cam-menu-4" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
+                                            <button onclick="toggleFlip(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                            </button>
+                                            <button onclick="openDMSearch(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="font-display text-5xl text-purple-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(192,132,252,0.8)] pointer-events-none" id="p4-lp">8000</div>
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                    <div id="p4-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <video id="p4-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
+                    
+                    <div id="p4-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P4...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player 5 -->
+            <div class="hidden flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-5">
+                <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p5-container">
+                    <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
+                    <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p5-lp-wrapper">
+                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <img id="p5-dm-img" src="" class="hidden w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 pointer-events-auto">
+                                    <div class="flex items-center gap-1.5 pointer-events-none">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P5</h2>
+                                    </div>
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-5" onclick="toggleMenu(5)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        </button>
+                                        <div id="cam-menu-5" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
+                                            <button onclick="toggleFlip(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                            </button>
+                                            <button onclick="openDMSearch(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="font-display text-5xl text-orange-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(249,115,22,0.8)] pointer-events-none" id="p5-lp">8000</div>
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                    <div id="p5-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <video id="p5-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
+                    <div id="p5-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P5...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player 6 -->
+            <div class="hidden flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-6">
+                <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p6-container">
+                    <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
+                    <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p6-lp-wrapper">
+                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <img id="p6-dm-img" src="" class="hidden w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 pointer-events-auto">
+                                    <div class="flex items-center gap-1.5 pointer-events-none">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P6</h2>
+                                    </div>
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-6" onclick="toggleMenu(6)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        </button>
+                                        <div id="cam-menu-6" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
+                                            <button onclick="toggleFlip(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                            </button>
+                                            <button onclick="openDMSearch(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="font-display text-5xl text-pink-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(236,72,153,0.8)] pointer-events-none" id="p6-lp">8000</div>
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                    <div id="p6-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <video id="p6-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
+                    <div id="p6-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P6...</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar / Utilities -->
+        <div class="lg:w-80 flex flex-col gap-2 min-h-0 shrink-0">
+            
+            <!-- Card Preview & Search -->
+            <div class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 shadow-lg flex-1 flex flex-col gap-2 relative min-h-0">
+                <div class="relative z-30 shrink-0">
+                    <input type="text" id="card-search" oninput="searchCard(this.value)" onkeydown="handleSearchKey(event)" placeholder="Search card database..." class="w-full bg-zinc-950 text-white text-sm p-2 rounded border border-zinc-700 focus:outline-none focus:border-cyan-500 placeholder-zinc-600 transition">
+                    <div id="search-results" class="absolute top-full left-0 w-full bg-zinc-800 border border-zinc-700 rounded-b shadow-2xl mt-0 hidden max-h-48 overflow-y-auto log-container"></div>
+                </div>
+                
+                <div id="card-preview" class="flex-col gap-2 items-center hidden flex-1 min-h-0">
+                    <img id="preview-img" src="" class="h-[283px] w-auto rounded shadow-lg object-contain border border-zinc-800 shrink-0">
+                    <div class="w-full bg-zinc-950 p-2 rounded border border-zinc-800 flex-1 flex flex-col min-h-0">
+                        <strong id="preview-name" class="block text-cyan-400 text-xs mb-1 font-bold shrink-0"></strong>
+                        <div id="preview-stats" class="text-[10px] text-zinc-400 flex flex-wrap gap-x-1.5 gap-y-1 mb-1.5 hidden shrink-0"></div>
+                        <div id="preview-desc" class="text-[10px] text-zinc-300 flex-1 overflow-y-auto log-container leading-tight whitespace-pre-wrap min-h-0"></div>
+                    </div>
+                </div>
+                
+                <div id="preview-placeholder" class="flex-1 flex items-center justify-center border-2 border-dashed border-zinc-700 rounded-lg text-zinc-600 text-xs font-mono uppercase tracking-widest bg-zinc-950/50">
+                    Card Preview
+                </div>
+            </div>
+
+            <!-- Recent Searches -->
+            <div id="card-history-panel" class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 shadow-lg shrink-0 flex flex-col gap-1 max-h-40">
+                <div class="text-[10px] text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-1 font-semibold shrink-0">Recent Searches</div>
+                <div id="empty-history" class="text-[10px] text-zinc-600 italic px-1 py-1">No history yet.</div>
+                <ul id="card-history-list" class="flex flex-col overflow-y-auto log-container pb-1 pt-1 text-zinc-400 gap-1 hidden">
+                    <!-- History items will go here -->
+                </ul>
+            </div>
+
+            <!-- LP Calculator (Sidebar) -->
+            <div id="lp-calculator" class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-lg shrink-0 flex flex-col gap-2 transition-all duration-300">
+                <div class="flex justify-between items-center border-b border-zinc-800 pb-2 mb-1">
+                    <span id="calc-target-label" class="text-xs font-bold uppercase tracking-widest text-cyan-400">Your Life Points (P1)</span>
+                </div>
+                <input type="number" id="calc-input" class="w-full bg-zinc-950 text-white font-mono text-right text-2xl p-2 rounded border border-zinc-700 focus:outline-none focus:border-cyan-500 placeholder-zinc-700" placeholder="0">
+                <div class="grid grid-cols-2 gap-1.5 mt-1">
+                    <button onclick="calcAction('dmg')" class="bg-red-900/80 hover:bg-red-800 text-red-100 rounded py-2 font-bold text-sm transition">- DMG</button>
+                    <button onclick="calcAction('heal')" class="bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 rounded py-2 font-bold text-sm transition">+ HEAL</button>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button onclick="calcAction('set')" class="bg-cyan-900/80 hover:bg-cyan-800 text-cyan-100 rounded py-2 font-bold text-sm transition">SET</button>
+                    <button onclick="eliminateActivePlayer()" class="bg-red-950/80 hover:bg-red-900 text-red-400 rounded py-2 font-bold text-sm border border-red-900/50 transition">ELIMINATED</button>
+                </div>
+            </div>
+
+            <!-- Utilities -->
+            <div class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 shadow-lg flex gap-2 shrink-0">
+                <button onclick="rollDice()" class="flex-1 bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/50 text-indigo-300 py-2 rounded-lg flex flex-col items-center gap-1 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                        <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"/>
+                        <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"/>
+                        <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"/>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Roll Dice</span>
+                </button>
+                <button onclick="flipCoin()" class="flex-1 bg-amber-900/40 hover:bg-amber-800/60 border border-amber-700/50 text-amber-300 py-2 rounded-lg flex flex-col items-center gap-1 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v10M9 10l3-3 3 3"/>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Flip Coin</span>
+                </button>
+            </div>
+
+            <!-- Activity Log -->
+            <div id="log-panel" class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-lg flex flex-col shrink-0 transition-all duration-300">
+                <div class="flex justify-between items-center border-b border-zinc-800 pb-1 shrink-0 cursor-pointer group" onclick="toggleLog()">
+                    <div class="flex items-center gap-2">
+                        <svg id="log-chevron" class="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-transform duration-300" style="transform: rotate(-90deg);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <h3 class="font-display text-lg text-zinc-300 m-0 leading-none">Duel Log & Chat</h3>
+                    </div>
+                    <button onclick="clearLog(event)" class="text-[10px] text-zinc-500 hover:text-zinc-300 uppercase tracking-wider z-10 relative px-2 py-1">Clear</button>
+                </div>
+                <div id="duel-log" class="hidden flex-1 overflow-y-auto log-container flex-col gap-1 text-xs font-mono pr-1 mb-2 mt-2">
+                    <div class="text-zinc-500 italic">Duel started. Waiting for actions...</div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div id="chat-input-container" class="shrink-0 gap-2 hidden mt-1">
+                    <input type="text" id="chat-input" onkeypress="handleChatKey(event)" placeholder="Type a message..." class="flex-1 bg-zinc-950 text-white text-xs p-2 rounded border border-zinc-700 focus:outline-none focus:border-cyan-500 placeholder-zinc-600 transition">
+                    <button onclick="sendChat()" class="bg-cyan-900/80 hover:bg-cyan-800 text-cyan-100 p-2 rounded transition flex items-center justify-center border border-cyan-700/50" title="Send Message">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Deck Master Search Modal -->
+    <div id="dm-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-[80vh] overflow-hidden">
+            <div class="p-3 border-b border-zinc-800 flex justify-between items-center">
+                <h3 class="text-amber-400 font-display text-xl tracking-wide m-0 leading-none uppercase">Set Deck Master</h3>
+                <button onclick="closeDMSearch()" class="text-zinc-500 hover:text-red-400 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-3 bg-zinc-950">
+                <input type="text" id="dm-search-input" oninput="searchDMCard(this.value)" onkeydown="handleDMSearchKey(event)" placeholder="Search monster..." class="w-full bg-zinc-900 text-white text-sm p-2 rounded border border-zinc-700 focus:outline-none focus:border-amber-500 placeholder-zinc-600 transition">
+            </div>
+            <div id="dm-search-results" class="flex-1 overflow-y-auto log-container bg-zinc-900 p-2 space-y-1">
+                <div class="text-zinc-600 text-xs italic text-center py-4">Type a card name to search...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let totalPlayers = 4;
+        let currentRoomId = null;
+        const socket = io('https://battle-city-7f80.onrender.com');
+
+        socket.on('connect', () => {
+            // Wait for the DOM to be ready before trying to manipulate the UI log
+            if(document.getElementById('duel-log')) {
+                addLog('System', 'Connected to Global Matchmaking Server!', 'text-emerald-400 font-bold');
+            }
+            
+            const lobbyHeader = document.querySelector('h2.text-cyan-400');
+            if (lobbyHeader && !lobbyHeader.innerHTML.includes('ONLINE')) {
+                lobbyHeader.innerHTML += ' <span class="text-[10px] text-emerald-400 font-mono tracking-normal ml-3 px-1.5 py-0.5 border border-emerald-500/50 rounded bg-emerald-900/30">ONLINE</span>';
+            }
+        });
+
+        socket.on('lobby-update', (rooms) => {
+            console.log("Live Rooms fetched from server:", rooms);
+            updateLobbyUI(rooms);
+        });
+
+        socket.on('room-created', (roomId) => {
+            currentRoomId = roomId;
+            addLog('System', `Room registered on server! ID: <span class="text-cyan-300 font-mono">${roomId}</span>`, 'text-emerald-400 font-bold');
+        });
+
+        socket.on('player-joined', (data) => {
+            addLog('System', `A new Duelist joined the room!`, 'text-cyan-400 font-bold');
+        });
+        
+        socket.on('error', (msg) => {
+            alert(`Server Error: ${msg}`);
+        });
+
+        // --- Live Lobby UI Builder ---
+        function updateLobbyUI(rooms) {
+            const lobbyList = document.getElementById('lobby-room-list');
+            if(!lobbyList) return;
+            
+            lobbyList.innerHTML = '';
+            
+            if (rooms.length === 0) {
+                lobbyList.innerHTML = '<div class="text-zinc-500 italic text-center p-4 mt-10">No public rooms available right now. Host one!</div>';
+                return;
+            }
+
+            rooms.forEach(room => {
+                const roomEl = document.createElement('div');
+                roomEl.className = 'room-card border border-zinc-700/80 rounded-lg p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:border-cyan-500/50 transition shadow-lg group';
+                roomEl.dataset.format = room.format;
+                
+                let formatColor = 'text-zinc-300 bg-zinc-800 border-zinc-700';
+                if(room.format === 'Domain') formatColor = 'text-indigo-300 bg-indigo-900/50 border-indigo-700/50';
+                else if(room.format === 'Advanced') formatColor = 'text-red-300 bg-red-900/50 border-red-700/50';
+
+                roomEl.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="${formatColor} text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border">${room.format}</span>
+                            <h3 class="text-zinc-100 font-bold text-lg leading-none group-hover:text-cyan-300 transition">${room.hostName}'s Room</h3>
+                        </div>
+                        <div class="text-xs text-zinc-400 flex items-center gap-4 font-mono">
+                            <span class="flex items-center gap-1.5 text-zinc-300"><svg class="w-3.5 h-3.5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> ${room.currentPlayers}/${room.maxPlayers} Duelists</span>
+                            ${room.allowSpectators ? `<span class="flex items-center gap-1.5 text-zinc-400"><svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> ${room.spectators} Spectators</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+                        ${room.allowSpectators ? `<button onclick="joinServerRoom('${room.id}', true)" class="flex-1 lg:flex-none bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-4 py-2 rounded text-sm font-bold transition border border-zinc-700">Spectate</button>` : ''}
+                        <button onclick="joinServerRoom('${room.id}', false)" ${room.currentPlayers >= room.maxPlayers ? 'disabled' : ''} class="flex-1 lg:flex-none bg-cyan-700 hover:bg-cyan-600 text-cyan-50 px-4 py-2 rounded text-sm font-bold shadow-[0_0_10px_rgba(6,182,212,0.3)] border border-cyan-500 transition disabled:opacity-50 disabled:cursor-not-allowed">Join Duel</button>
+                    </div>
+                `;
+                lobbyList.appendChild(roomEl);
+            });
+            
+            // Re-apply the current filter if one is active
+            const activeFilterBtn = document.querySelector('.filter-btn.active');
+            if(activeFilterBtn) {
+                filterLobby(activeFilterBtn.textContent.trim() === 'All Formats' ? 'All' : activeFilterBtn.textContent.trim());
+            }
+        }
+
+        function joinServerRoom(roomId, isSpectator) {
+            if(socket && socket.connected) {
+                socket.emit('join-room', roomId, isSpectator);
+                currentRoomId = roomId;
+                
+                // Hide Lobby Modal
+                document.getElementById('setup-modal').classList.add('hidden');
+                document.getElementById('setup-modal').classList.remove('flex');
+                
+                // Set default grid size for a joining player (Will expand dynamically in future WebRTC step)
+                document.getElementById('grid-item-1').classList.remove('hidden');
+                document.getElementById('grid-item-1').classList.add('flex');
+                document.getElementById('grid-item-2').classList.remove('hidden');
+                document.getElementById('grid-item-2').classList.add('flex');
+                
+                const grid = document.getElementById('video-grid');
+                grid.className = 'flex-1 grid gap-0 min-h-0 h-full p-0 bg-black grid-cols-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1';
+
+                initWebcam();
+                addLog('System', `Joined room: ${roomId}`, 'text-emerald-400 font-bold');
+            } else {
+                alert("Server is not connected! Make sure your Node.js server is running.");
+            }
+        }
+
+        let lp = { 1: 8000, 2: 8000, 3: 8000, 4: 8000, 5: 8000, 6: 8000 };
+        const logEl = document.getElementById('duel-log');
+
+        let localStream = null;
+        let isMicOn = true;
+        let isCamOn = true;
+        let isFlipped = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false }; 
+        
+        let activeCalcPlayer = null;
+
+        // --- Authentication ---
+        let yugiPassUser = null;
+
+        function simulateYugiPassLogin() {
+            const btn = document.getElementById('yugipass-login-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Authenticating...';
+            btn.disabled = true;
+
+            // Simulate network delay for realistic feel
+            setTimeout(() => {
+                yugiPassUser = {
+                    username: 'YugiMuto_YGOrg',
+                    avatar: 'https://images.ygoprodeck.com/images/cards_cropped/89631139.jpg' // Dark Magician avatar
+                };
+                
+                const nameInput = document.getElementById('setup-name');
+                nameInput.value = yugiPassUser.username;
+                nameInput.disabled = true; 
+                nameInput.classList.add('opacity-50', 'cursor-not-allowed');
+
+                btn.classList.add('hidden');
+                document.getElementById('yugipass-user-profile').classList.remove('hidden');
+                
+                document.getElementById('yp-avatar').src = yugiPassUser.avatar;
+                document.getElementById('yp-username').textContent = yugiPassUser.username;
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1000);
+        }
+
+        function logoutYugiPass() {
+            yugiPassUser = null;
+            const nameInput = document.getElementById('setup-name');
+            nameInput.value = 'Player 1';
+            nameInput.disabled = false;
+            nameInput.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            document.getElementById('yugipass-login-btn').classList.remove('hidden');
+            document.getElementById('yugipass-user-profile').classList.add('hidden');
+        }
+
+        // --- Room Initialization ---
+        function launchRoom() {
+            totalPlayers = parseInt(document.getElementById('setup-players').value);
+            const format = document.getElementById('setup-format').value;
+            const isPrivate = document.getElementById('setup-private').checked;
+            const allowSpectators = document.getElementById('setup-spectators').checked;
+            const hostName = document.getElementById('setup-name').value || 'Player 1';
+
+            // Connect and register the room with the Matchmaker Server
+            if (socket && socket.connected) {
+                socket.emit('create-room', {
+                    hostName: hostName,
+                    format: format,
+                    maxPlayers: totalPlayers,
+                    isPrivate: isPrivate,
+                    allowSpectators: allowSpectators
+                });
+            } else {
+                console.warn("Matchmaker not connected. Starting in offline local mode.");
+            }
+
+            document.getElementById('setup-modal').classList.add('hidden');
+            document.getElementById('setup-modal').classList.remove('flex');
+            
+            // Adjust Video Grid Layout Dynamically
+            const grid = document.getElementById('video-grid');
+            grid.className = 'flex-1 grid gap-0 min-h-0 h-full p-0 bg-black'; // Reset specific classes
+            
+            if (totalPlayers === 2) {
+                grid.classList.add('grid-cols-1', 'grid-rows-2');
+                playerGridPositions = [1, 2];
+            } else if (totalPlayers <= 4) {
+                grid.classList.add('grid-cols-2', 'grid-rows-2');
+                playerGridPositions = totalPlayers === 3 ? [1, 2, 3] : [1, 2, 3, 4];
+            } else {
+                grid.classList.add('grid-cols-3', 'grid-rows-2');
+                playerGridPositions = totalPlayers === 5 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6];
+            }
+
+            // Show/Hide active players and initialize their LP
+            for(let i = 1; i <= 6; i++) {
+                const item = document.getElementById(`grid-item-${i}`);
+                if(item) {
+                    if(i <= totalPlayers) {
+                        item.classList.remove('hidden');
+                        item.classList.add('flex');
+                        updateLPDisplay(i);
+                    } else {
+                        item.classList.add('hidden');
+                        item.classList.remove('flex');
+                    }
+                }
+            }
+            
+            addLog('System', `Room initialized. Host: <span class="text-white">${hostName}</span>. Format: <span class="text-white">${format}</span>. Mode: ${isPrivate ? 'Private' : 'Public'}. Spectators: ${allowSpectators ? 'Yes' : 'No'}.`, 'text-cyan-400 font-bold');
+            
+            initWebcam();
+            randomizeSeats(false); // Organize visually into the new grid layout without logging a shuffle
+        }
+
+        function leaveRoom() {
+            // Stop camera and mic
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Stop any active duel
+            if (duelActive) stopDuelTimer();
+            
+            // Reset logs and calculator
+            logEl.innerHTML = '<div class="text-zinc-500 italic">Waiting for room configuration...</div>';
+            clearCalc();
+            
+            // Show setup modal
+            document.getElementById('setup-modal').classList.remove('hidden');
+            document.getElementById('setup-modal').classList.add('flex');
+            
+            hasInitializedCam = false;
+        }
+
+        // Toggle Camera Options Menu
+        function toggleMenu(playerNum) {
+            const menu = document.getElementById(`cam-menu-${playerNum}`);
+            if (menu.classList.contains('hidden')) {
+                // Close any other open menus first
+                for (let i = 1; i <= 6; i++) {
+                    const otherMenu = document.getElementById(`cam-menu-${i}`);
+                    if (otherMenu) {
+                        otherMenu.classList.add('hidden');
+                        otherMenu.classList.remove('flex');
+                    }
+                }
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        // Close camera options menu if clicking anywhere outside of it
+        document.addEventListener('click', (e) => {
+            for (let i = 1; i <= 6; i++) {
+                const menu = document.getElementById(`cam-menu-${i}`);
+                const btn = document.getElementById(`cam-btn-${i}`);
+                if (menu && !menu.classList.contains('hidden')) {
+                    if (!menu.contains(e.target) && btn && !btn.contains(e.target)) {
+                        menu.classList.add('hidden');
+                        menu.classList.remove('flex');
+                    }
+                }
+            }
+        });
+
+        function toggleFlip(playerNum) {
+            isFlipped[playerNum] = !isFlipped[playerNum];
+            const transformValue = isFlipped[playerNum] ? 'scaleY(-1)' : 'scaleY(1)';
+            
+            if (playerNum === 1) {
+                const videoEl = document.getElementById('local-video');
+                // P1's local video usually has a horizontal flip by default so they see a mirror.
+                // We preserve that horizontal flip and add the vertical flip on top.
+                if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleX(-1) scaleY(-1)' : 'scaleX(-1)';
+            } else {
+                const videoEl = document.getElementById(`p${playerNum}-video`);
+                if (videoEl) videoEl.style.transform = transformValue;
+                
+                const placeholder = document.getElementById(`p${playerNum}-placeholder`);
+                if (placeholder) placeholder.style.transform = transformValue;
+            }
+        }
+
+        // --- Duel Timer & Elimination State ---
+        let timerInterval = null;
+        let duelStartTime = null;
+        let duelActive = false;
+        let isEliminated = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+        let isRouletteSpinning = false;
+        let activePlayerTurn = null;
+        let clockwiseOrder = [1, 2, 4, 3]; // Default for 4
+        let playerGridPositions = [1, 2, 3, 4]; // Default for 4
+
+        function randomizeSeats(shuffle = true) {
+            if (shuffle) {
+                for (let i = playerGridPositions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [playerGridPositions[i], playerGridPositions[j]] = [playerGridPositions[j], playerGridPositions[i]];
+                }
+            }
+
+            let cols = 2;
+            if (totalPlayers === 2) cols = 1;
+            else if (totalPlayers > 4) cols = 3;
+
+            playerGridPositions.forEach((playerNum, index) => {
+                const gridItem = document.getElementById(`grid-item-${playerNum}`);
+                if (gridItem) gridItem.style.order = index + 1;
+
+                const lpWrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
+                if (lpWrapper) {
+                    lpWrapper.style.left = '';
+                    lpWrapper.style.top = '';
+                    lpWrapper.style.right = '';
+                    lpWrapper.style.bottom = '';
+                    lpWrapper.classList.remove('top-1', 'bottom-1', 'left-1', 'right-1');
+                    
+                    const isTopRow = index < cols;
+                    const isLeftCol = index % cols === 0;
+                    const isRightCol = index % cols === (cols - 1);
+                    
+                    if (isTopRow) lpWrapper.classList.add('bottom-1');
+                    else lpWrapper.classList.add('top-1');
+                    
+                    if (isLeftCol) lpWrapper.classList.add('right-1');
+                    else if (isRightCol) lpWrapper.classList.add('left-1');
+                    else lpWrapper.classList.add('left-1'); // Center col defaults to pushing left
+                }
+            });
+
+            // Update spacebar clockwise turn logic dynamically based on visual layout
+            if (totalPlayers === 2) clockwiseOrder = [playerGridPositions[0], playerGridPositions[1]];
+            if (totalPlayers === 3) clockwiseOrder = [playerGridPositions[0], playerGridPositions[1], playerGridPositions[2]];
+            if (totalPlayers === 4) clockwiseOrder = [playerGridPositions[0], playerGridPositions[1], playerGridPositions[3], playerGridPositions[2]];
+            if (totalPlayers === 5) clockwiseOrder = [playerGridPositions[0], playerGridPositions[1], playerGridPositions[2], playerGridPositions[4], playerGridPositions[3]];
+            if (totalPlayers === 6) clockwiseOrder = [playerGridPositions[0], playerGridPositions[1], playerGridPositions[2], playerGridPositions[5], playerGridPositions[4], playerGridPositions[3]];
+
+            if (shuffle) addLog('System', 'Room seating has been randomized!', 'text-indigo-400 italic font-bold');
+        }
+
+        function startDuelTimer() {
+            if (duelActive || isRouletteSpinning) return;
+            isRouletteSpinning = true;
+            
+            // Reset board state for a new game
+            for (let i = 1; i <= totalPlayers; i++) {
+                isEliminated[i] = false;
+                lp[i] = 8000;
+                updateLPDisplay(i);
+                
+                const wrapper = document.getElementById(`p${i}-lp-wrapper`);
+                if(wrapper) {
+                    const innerBox = wrapper.firstElementChild;
+                    
+                    innerBox.classList.add('bg-zinc-900/85', 'hover:bg-zinc-800', 'border-zinc-700/50');
+                    innerBox.classList.remove('bg-red-950/90', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+                    
+                    const lpText = document.getElementById(`p${i}-lp`);
+                    let pColor = 'text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]';
+                    if(i === 2) pColor = 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]';
+                    if(i === 3) pColor = 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]';
+                    if(i === 4) pColor = 'text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]';
+                    if(i === 5) pColor = 'text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]';
+                    if(i === 6) pColor = 'text-pink-500 drop-shadow-[0_0_10px_rgba(236,72,153,0.8)]';
+                    lpText.className = `font-display text-5xl leading-none tracking-wider pointer-events-none ${pColor}`;
+                }
+            }
+
+            const btn = document.getElementById('start-duel-btn');
+            btn.classList.add('hidden');
+            btn.textContent = 'DUEL!'; // Reset text if it was changed to New Duel
+            
+            const timerEl = document.getElementById('duel-timer');
+            timerEl.classList.remove('text-zinc-400', 'text-amber-400', 'animate-pulse');
+            timerEl.classList.add('text-cyan-400');
+            timerEl.textContent = '00:00:00';
+            
+            addLog('System', 'Selecting who goes first...', 'text-amber-300 italic');
+            
+            let ticks = 0;
+            const maxTicks = 10 + Math.floor(Math.random() * 10); // Spin 10 to 19 times (halved duration)
+            let currentIndex = 0;
+
+            const rouletteInterval = setInterval(() => {
+                // Clear all highlights
+                for(let i = 1; i <= totalPlayers; i++) {
+                    const w = document.getElementById(`p${i}-lp-wrapper`);
+                    if(w) w.firstElementChild.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+                }
+                
+                // Highlight current spinning selection
+                const p = clockwiseOrder[currentIndex];
+                const innerBox = document.getElementById(`p${p}-lp-wrapper`).firstElementChild;
+                innerBox.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+
+                ticks++;
+                
+                if (ticks >= maxTicks) {
+                    clearInterval(rouletteInterval);
+                    isRouletteSpinning = false;
+                    
+                    duelActive = true;
+                    duelStartTime = Date.now();
+                    activePlayerTurn = p;
+                    
+                    timerInterval = setInterval(updateTimer, 1000);
+                    addLog('System', `DUEL STARTED! P${p} goes first!`, 'text-cyan-400 text-lg uppercase font-bold');
+                } else {
+                    currentIndex = (currentIndex + 1) % totalPlayers;
+                }
+            }, 100);
+        }
+
+        function updateTimer() {
+            if (!duelActive) return;
+            const elapsed = Math.floor((Date.now() - duelStartTime) / 1000);
+            const h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+            const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+            const s = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('duel-timer').textContent = `${h}:${m}:${s}`;
+        }
+
+        function stopDuelTimer() {
+            if (!duelActive) return;
+            duelActive = false;
+            clearInterval(timerInterval);
+            const timerEl = document.getElementById('duel-timer');
+            timerEl.classList.remove('text-cyan-400');
+            timerEl.classList.add('text-amber-400', 'animate-pulse');
+            
+            // Re-show the button to allow starting a new game
+            const btn = document.getElementById('start-duel-btn');
+            btn.classList.remove('hidden');
+            btn.textContent = 'NEW DUEL!';
+
+            // Clear turn highlight
+            if (activePlayerTurn) {
+                const innerBox = document.getElementById(`p${activePlayerTurn}-lp-wrapper`).firstElementChild;
+                innerBox.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+                activePlayerTurn = null;
+            }
+        }
+
+        function checkWinCondition() {
+            if (!duelActive) return;
+            let activeCount = 0;
+            let winner = null;
+            for (let i = 1; i <= totalPlayers; i++) {
+                if (!isEliminated[i]) {
+                    activeCount++;
+                    winner = i;
+                }
+            }
+            if (activeCount <= 1) {
+                stopDuelTimer();
+                if (activeCount === 1) {
+                    addLog('System', `DUEL CONCLUDED! P${winner} WINS!`, 'text-amber-400 font-bold text-xl uppercase');
+                } else {
+                    addLog('System', 'DUEL CONCLUDED! DRAW!', 'text-amber-400 font-bold text-xl uppercase');
+                }
+            }
+        }
+
+        function passTurn(forcePassFrom = null) {
+            let currentPlayer = forcePassFrom || activePlayerTurn;
+            if (!currentPlayer) return;
+            
+            let currentIndex = clockwiseOrder.indexOf(currentPlayer);
+            let nextPlayer = null;
+            
+            // Look for the next alive player
+            for (let i = 1; i <= totalPlayers - 1; i++) {
+                let checkIndex = (currentIndex + i) % totalPlayers;
+                let checkPlayer = clockwiseOrder[checkIndex];
+                if (!isEliminated[checkPlayer]) {
+                    nextPlayer = checkPlayer;
+                    break;
+                }
+            }
+            
+            // Remove highlight from old player
+            if (!forcePassFrom && activePlayerTurn) {
+                const oldBox = document.getElementById(`p${activePlayerTurn}-lp-wrapper`).firstElementChild;
+                oldBox.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+            }
+            
+            if (nextPlayer) {
+                activePlayerTurn = nextPlayer;
+                const newBox = document.getElementById(`p${activePlayerTurn}-lp-wrapper`).firstElementChild;
+                newBox.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+                addLog('System', `Turn passed to P${activePlayerTurn}`, 'text-amber-200');
+            } else {
+                activePlayerTurn = null; // No one left to pass to
+            }
+        }
+
+        function eliminatePlayerId(playerNum) {
+            if (isEliminated[playerNum]) return;
+            isEliminated[playerNum] = true;
+            lp[playerNum] = 0;
+            updateLPDisplay(playerNum);
+            
+            const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
+            const innerBox = wrapper.firstElementChild;
+            
+            innerBox.classList.remove('bg-zinc-900/85', 'hover:bg-zinc-800', 'border-zinc-700/50', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+            innerBox.classList.add('bg-red-950/90', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]');
+            
+            const lpText = document.getElementById(`p${playerNum}-lp`);
+            lpText.className = 'font-display text-5xl leading-none tracking-wider drop-shadow-md line-through text-red-600 opacity-70';
+            
+            addLog(`P${playerNum}`, 'has been ELIMINATED!', 'text-red-500 font-bold uppercase');
+            
+            // Pass the turn immediately if the active player is eliminated
+            if (activePlayerTurn === playerNum) {
+                activePlayerTurn = null;
+                passTurn(playerNum);
+            }
+            
+            checkWinCondition();
+        }
+
+        function eliminateActivePlayer() {
+            if (!activeCalcPlayer) return;
+            eliminatePlayerId(activeCalcPlayer);
+            clearCalc();
+        }
+
+        // Init Webcam
+        let hasInitializedCam = false;
+        async function initWebcam() {
+            if (hasInitializedCam) return;
+            hasInitializedCam = true;
+
+            const videoEl = document.getElementById('local-video');
+            const errorOverlay = document.getElementById('cam-error-message');
+            const errorText = document.getElementById('cam-error-text');
+
+            try {
+                // Request 1080p at a solid framerate. This prevents webcams from adding noise/grain
+                // by struggling to process artificial 4K or dropping framerates.
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30, max: 60 }
+                    }, 
+                    audio: true 
+                });
+                videoEl.srcObject = localStream;
+                errorOverlay.classList.add('hidden');
+                
+                // Sync UI state to ON
+                isCamOn = true;
+                isMicOn = true;
+                document.getElementById('cam-icon-on').classList.remove('hidden');
+                document.getElementById('cam-icon-off').classList.add('hidden');
+                document.getElementById('mic-icon-on').classList.remove('hidden');
+                document.getElementById('mic-icon-off').classList.add('hidden');
+            } catch (err) {
+                console.error("Error accessing webcam:", err);
+                let userMsg = 'Failed to access camera.';
+                if (err.name === 'NotAllowedError' || (err.message && err.message.toLowerCase().includes('dismissed'))) {
+                    userMsg = 'Camera access denied or dismissed by user.';
+                } else if (err.name === 'NotFoundError') {
+                    userMsg = 'No camera device found.';
+                } else if (err.name === 'NotReadableError' || (err.message && err.message.includes('video source'))) {
+                     userMsg = 'Camera in use or blocked by OS.';
+                }
+                
+                errorText.textContent = userMsg;
+                errorOverlay.classList.remove('hidden');
+                addLog('System', `Media error: ${userMsg}`, 'text-red-500');
+                
+                // Properly update state if it fails so the UI doesn't think it's on
+                isCamOn = false;
+                isMicOn = false;
+                document.getElementById('cam-icon-on').classList.add('hidden');
+                document.getElementById('cam-icon-off').classList.remove('hidden');
+                document.getElementById('mic-icon-on').classList.add('hidden');
+                document.getElementById('mic-icon-off').classList.remove('hidden');
+            }
+        }
+
+        // Media Controls
+        function toggleMic() {
+            if (!localStream) {
+                addLog('System', 'No microphone track available.', 'text-red-500');
+                return;
+            }
+            const audioTracks = localStream.getAudioTracks();
+            if (audioTracks.length > 0) {
+                isMicOn = !isMicOn;
+                audioTracks[0].enabled = isMicOn;
+                document.getElementById('mic-icon-on').classList.toggle('hidden', !isMicOn);
+                document.getElementById('mic-icon-off').classList.toggle('hidden', isMicOn);
+                
+                addLog('System', `Microphone ${isMicOn ? 'unmuted' : 'muted'}.`);
+            }
+        }
+
+        async function toggleCam() {
+            const videoEl = document.getElementById('local-video');
+            const errorOverlay = document.getElementById('cam-error-message');
+            
+            if (isCamOn) {
+                // Turn OFF camera by fully stopping the track
+                if (localStream) {
+                    localStream.getVideoTracks().forEach(track => track.stop());
+                }
+                isCamOn = false;
+                
+                document.getElementById('cam-icon-on').classList.add('hidden');
+                document.getElementById('cam-icon-off').classList.remove('hidden');
+                
+                addLog('System', 'Camera disabled.');
+            } else {
+                // Turn ON camera by requesting a fresh stream
+                try {
+                    const newStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: {
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            frameRate: { ideal: 30, max: 60 }
+                        }
+                    });
+                    const newVideoTrack = newStream.getVideoTracks()[0];
+                    
+                    if (localStream) {
+                        localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
+                        localStream.addTrack(newVideoTrack);
+                    } else {
+                        localStream = newStream;
+                    }
+                    
+                    videoEl.srcObject = null; // force video element to refresh
+                    videoEl.srcObject = localStream;
+                    isCamOn = true;
+                    
+                    document.getElementById('cam-icon-on').classList.remove('hidden');
+                    document.getElementById('cam-icon-off').classList.add('hidden');
+                    errorOverlay.classList.add('hidden'); // Clear error overlay on success
+                    
+                    addLog('System', 'Camera enabled.');
+                } catch (err) {
+                    console.error("Error restarting camera:", err);
+                    let userMsg = 'Failed to restart camera.';
+                    if (err.name === 'NotAllowedError' || (err.message && err.message.toLowerCase().includes('dismissed'))) {
+                        userMsg = 'Camera access denied or dismissed by user.';
+                    }
+                    document.getElementById('cam-error-text').textContent = userMsg;
+                    errorOverlay.classList.remove('hidden');
+                    addLog('System', `Media error: ${userMsg}`, 'text-red-500');
+                }
+            }
+        }
+
+        // Logging System
+        function addLog(actor, message, colorClass = 'text-zinc-300') {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+            const entry = document.createElement('div');
+            entry.className = `p-2 rounded bg-zinc-950/50 border border-zinc-800/50 ${colorClass}`;
+            
+            // Remove initial placeholder
+            if(logEl.children.length === 1 && logEl.children[0].classList.contains('italic')) {
+                logEl.innerHTML = '';
+            }
+
+            let prefix = '';
+            if (actor === 'P1') prefix = '<span class="text-blue-400 font-bold drop-shadow-[0_0_5px_rgba(96,165,250,0.8)]">[P1]</span> ';
+            else if (actor === 'P2') prefix = '<span class="text-red-500 font-bold drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]">[P2]</span> ';
+            else if (actor === 'P3') prefix = '<span class="text-yellow-400 font-bold drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">[P3]</span> ';
+            else if (actor === 'P4') prefix = '<span class="text-purple-400 font-bold drop-shadow-[0_0_5px_rgba(192,132,252,0.8)]">[P4]</span> ';
+            else if (actor === 'P5') prefix = '<span class="text-orange-500 font-bold drop-shadow-[0_0_5px_rgba(249,115,22,0.8)]">[P5]</span> ';
+            else if (actor === 'P6') prefix = '<span class="text-pink-500 font-bold drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]">[P6]</span> ';
+            else if (actor === 'System') prefix = '<span class="text-zinc-400 font-bold">[SYS]</span> ';
+
+            entry.innerHTML = `<span class="text-zinc-600 text-[10px] mr-1">${time}</span> ${prefix}${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog(e) {
+            if (e) e.stopPropagation(); // Prevents the panel from collapsing when clicking the clear button
+            logEl.innerHTML = '<div class="text-zinc-500 italic">Log cleared.</div>';
+        }
+
+        let isLogCollapsed = true;
+        function toggleLog() {
+            isLogCollapsed = !isLogCollapsed;
+            const panel = document.getElementById('log-panel');
+            const logContent = document.getElementById('duel-log');
+            const chevron = document.getElementById('log-chevron');
+            const chatInput = document.getElementById('chat-input-container');
+
+            if (isLogCollapsed) {
+                logContent.classList.add('hidden');
+                logContent.classList.remove('flex');
+                chatInput.classList.add('hidden');
+                chatInput.classList.remove('flex');
+                panel.classList.remove('flex-1', 'min-h-0');
+                chevron.style.transform = 'rotate(-90deg)';
+            } else {
+                logContent.classList.remove('hidden');
+                logContent.classList.add('flex');
+                chatInput.classList.remove('hidden');
+                chatInput.classList.add('flex');
+                panel.classList.add('flex-1', 'min-h-0');
+                chevron.style.transform = 'rotate(0deg)';
+                // Scroll to the latest log entry when reopening
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+        }
+
+        // --- Chat System ---
+        function handleChatKey(e) {
+            if (e.key === 'Enter') {
+                sendChat();
+            }
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // Basic escaping to prevent HTML injection in chat
+            const escapedMsg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+            addLog('P1', escapedMsg, 'text-zinc-100 font-sans'); // Differentiate chat from system logs
+            input.value = '';
+            input.focus();
+        }
+
+        // --- Calculator & LP Management ---
+        
+        function openCalc(playerNum) {
+            if (isEliminated[playerNum]) {
+                addLog('System', `P${playerNum} is already eliminated.`, 'text-red-400');
+                return;
+            }
+            
+            activeCalcPlayer = playerNum;
+            const label = document.getElementById('calc-target-label');
+            
+            let pColor = 'blue-400';
+            if(playerNum === 2) pColor = 'red-500';
+            if(playerNum === 3) pColor = 'yellow-400';
+            if(playerNum === 4) pColor = 'purple-400';
+            if(playerNum === 5) pColor = 'orange-500';
+            if(playerNum === 6) pColor = 'pink-500';
+
+            label.className = `text-xs font-bold uppercase tracking-widest text-${pColor} drop-shadow-md`;
+            label.textContent = playerNum === 1 ? `Your Life Points (P1)` : `P${playerNum} Life Points`;
+            
+            const input = document.getElementById('calc-input');
+            input.focus();
+        }
+
+        function clearCalc() {
+            const input = document.getElementById('calc-input');
+            input.value = '';
+            input.focus();
+        }
+
+        function calcType(val) {
+            const input = document.getElementById('calc-input');
+            input.value += val;
+            input.focus();
+        }
+
+        function calcBksp() {
+            const input = document.getElementById('calc-input');
+            input.value = input.value.slice(0, -1);
+            input.focus();
+        }
+
+        function calcAction(actionType) {
+            if (!activeCalcPlayer) activeCalcPlayer = 1;
+            
+            const input = document.getElementById('calc-input');
+            const val = parseInt(input.value);
+            
+            if (isNaN(val) || val < 0) {
+                clearCalc();
+                return;
+            }
+
+            if (actionType === 'set') {
+                setLP(activeCalcPlayer, val);
+            } else if (actionType === 'dmg') {
+                changeLP(activeCalcPlayer, -val);
+            } else if (actionType === 'heal') {
+                changeLP(activeCalcPlayer, val);
+            }
+            
+            clearCalc();
+        }
+
+        // Allow pressing Enter in the calculator input to perform a SET
+        document.getElementById('calc-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                calcAction('set');
+                e.preventDefault();
+            } else if (e.key === '-' || e.key === 'Subtract') {
+                calcAction('dmg');
+                e.preventDefault();
+            } else if (e.key === '+' || e.key === 'Add') {
+                calcAction('heal');
+                e.preventDefault();
+            }
+        });
+
+        function updateLPDisplay(player) {
+            const currentLP = lp[player];
+            document.getElementById(`p${player}-lp`).textContent = currentLP;
+            
+            const bar = document.getElementById(`p${player}-lp-bar`);
+            if (bar) {
+                // Determine width based on 8000 as 100% capacity
+                const percentage = Math.min((currentLP / 8000) * 100, 100);
+                bar.style.width = `${percentage}%`;
+                
+                if (currentLP >= 10000) {
+                    // Turn radiant gold if passing 10,000 LP
+                    bar.style.background = 'linear-gradient(90deg, #fcd34d, #f59e0b, #b45309)';
+                    bar.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.8)';
+                } else {
+                    // Slide down the hue spectrum from Green (120) to Red (0) as you get closer to 0
+                    const hue = Math.max(0, Math.min((currentLP / 8000) * 120, 120));
+                    bar.style.background = `hsl(${hue}, 80%, 50%)`;
+                    bar.style.boxShadow = `0 0 8px hsl(${hue}, 80%, 50%)`;
+                }
+            }
+        }
+
+        function changeLP(player, amount) {
+            if (isEliminated[player]) return;
+            
+            const oldLP = lp[player];
+            lp[player] = Math.max(0, lp[player] + amount);
+            updateLPDisplay(player);
+            
+            const action = amount > 0 ? 'gained' : 'lost';
+            const absAmount = Math.abs(amount);
+            const pStr = `P${player}`;
+            const color = amount > 0 ? 'text-emerald-400' : 'text-red-400';
+            
+            addLog(pStr, `${action} ${absAmount} LP. (${oldLP} → ${lp[player]})`, color);
+            
+            if (lp[player] === 0) eliminatePlayerId(player);
+        }
+
+        function setLP(player, amount) {
+            if (isEliminated[player]) return;
+            
+            lp[player] = Math.max(0, amount);
+            updateLPDisplay(player);
+            const pStr = `P${player}`;
+            addLog(pStr, `LP set to ${lp[player]}.`);
+            
+            if (lp[player] === 0) eliminatePlayerId(player);
+        }
+
+        // --- Dice & Coin Effects ---
+        function showEffect(playerNum, type, result) {
+            const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
+            if (!wrapper) return;
+
+            const isTop = wrapper.classList.contains('top-1');
+            const isRight = wrapper.classList.contains('right-1');
+            
+            // Find or create a flex container for this player's effects
+            let effectsContainer = document.getElementById(`effects-container-${playerNum}`);
+            if (!effectsContainer) {
+                effectsContainer = document.createElement('div');
+                effectsContainer.id = `effects-container-${playerNum}`;
+                wrapper.appendChild(effectsContainer);
+            }
+            
+            // Apply positioning based on current corner (updates dynamically if dragged)
+            effectsContainer.className = `absolute z-50 flex gap-3 items-center pointer-events-none w-max transition-all duration-300`;
+            
+            // Vertical anchoring
+            if (isTop) {
+                effectsContainer.style.top = '100%';
+                effectsContainer.style.bottom = 'auto';
+                effectsContainer.style.marginTop = '1rem';
+                effectsContainer.style.marginBottom = '0';
+            } else {
+                effectsContainer.style.bottom = '100%';
+                effectsContainer.style.top = 'auto';
+                effectsContainer.style.marginBottom = '1rem';
+                effectsContainer.style.marginTop = '0';
+            }
+
+            // Horizontal anchoring (prevents old items from shifting)
+            if (isRight) {
+                effectsContainer.style.right = '0';
+                effectsContainer.style.left = 'auto';
+                effectsContainer.style.flexDirection = 'row-reverse'; // Grow leftwards towards center
+            } else {
+                effectsContainer.style.left = '0';
+                effectsContainer.style.right = 'auto';
+                effectsContainer.style.flexDirection = 'row'; // Grow rightwards towards center
+            }
+
+            const itemWrapper = document.createElement('div');
+            itemWrapper.className = `transition-opacity duration-500 shrink-0`;
+
+            const spanId = `effect-res-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const el = document.createElement('div');
+            el.className = 'animate-toss flex items-center justify-center font-display leading-none ';
+
+            if (type === 'coin') {
+                el.className += 'w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-200 border-4 border-amber-700 shadow-[0_0_20px_rgba(251,191,36,0.8)] text-amber-900 text-5xl font-bold tracking-tighter';
+                el.innerHTML = `<span class="opacity-0 transition-opacity duration-200 drop-shadow-sm mt-2" id="${spanId}">${result}</span>`;
+            } else {
+                el.className += 'w-16 h-16 rounded-xl bg-gradient-to-br from-white to-zinc-200 border-2 border-zinc-400 shadow-[0_0_20px_rgba(255,255,255,0.8)] text-zinc-900 text-6xl font-bold tracking-tighter';
+                el.innerHTML = `<span class="opacity-0 transition-opacity duration-200 drop-shadow-sm mt-2" id="${spanId}">${result}</span>`;
+            }
+
+            itemWrapper.appendChild(el);
+            effectsContainer.appendChild(itemWrapper);
+
+            // Reveal the result text exactly when the spin animation finishes
+            setTimeout(() => {
+                const resSpan = document.getElementById(spanId);
+                if (resSpan) resSpan.classList.remove('opacity-0');
+            }, 1200);
+
+            // Fade out without shifting other items
+            setTimeout(() => {
+                itemWrapper.style.opacity = '0';
+                itemWrapper.dataset.faded = 'true'; // Mark this specific item as faded
+                
+                setTimeout(() => {
+                    // Only clean up the container if ALL items inside it have finished fading
+                    if (effectsContainer.parentElement) {
+                        const allChildren = Array.from(effectsContainer.children);
+                        const allFaded = allChildren.every(child => child.dataset.faded === 'true');
+                        
+                        if (allFaded) {
+                            effectsContainer.parentElement.removeChild(effectsContainer);
+                        }
+                    }
+                }, 500);
+            }, 3500);
+        }
+
+        // Utilities
+        function rollDice() {
+            const result = Math.floor(Math.random() * 6) + 1;
+            const p = activeCalcPlayer || 1;
+            addLog(`P${p}`, `rolled a 6-sided die: <span class="font-bold text-indigo-400 text-lg ml-1">${result}</span>`, 'text-indigo-200');
+            showEffect(p, 'dice', result);
+        }
+
+        function flipCoin() {
+            const isHeads = Math.random() >= 0.5;
+            const result = isHeads ? 'HEADS' : 'TAILS';
+            const color = isHeads ? 'text-amber-400' : 'text-zinc-400';
+            const p = activeCalcPlayer || 1;
+            addLog(`P${p}`, `flipped a coin: <span class="font-bold ${color} text-lg ml-1">${result}</span>`, 'text-amber-100');
+            showEffect(p, 'coin', isHeads ? 'H' : 'T');
+        }
+
+        // --- Card Search & Preview ---
+        let searchTimeout;
+        let cardHistory = [];
+        let searchSelectedIndex = -1;
+        
+        async function searchCard(query) {
+            clearTimeout(searchTimeout);
+            const resultsBox = document.getElementById('search-results');
+            
+            if (!query || query.length < 3) {
+                resultsBox.classList.add('hidden');
+                searchSelectedIndex = -1;
+                return;
+            }
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    // fname performs a fuzzy search on the API side natively
+                    const res = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(query)}&num=10&offset=0`);
+                    if (!res.ok) throw new Error('No cards found');
+                    const data = await res.json();
+                    
+                    resultsBox.innerHTML = '';
+                    searchSelectedIndex = -1;
+                    data.data.slice(0, 8).forEach(card => {
+                        const div = document.createElement('div');
+                        div.className = 'search-item p-2 hover:bg-zinc-700 cursor-pointer text-xs text-zinc-200 border-b border-zinc-700/50 last:border-0 truncate font-semibold';
+                        div.textContent = card.name;
+                        div.onclick = () => selectCard(card);
+                        resultsBox.appendChild(div);
+                    });
+                    resultsBox.classList.remove('hidden');
+                } catch (err) {
+                    resultsBox.innerHTML = '<div class="p-2 text-xs text-zinc-500 italic">No matches found...</div>';
+                    resultsBox.classList.remove('hidden');
+                    searchSelectedIndex = -1;
+                }
+            }, 500); // Increased to 500ms debounce to allow for more complete typing before firing
+        }
+
+        function handleSearchKey(e) {
+            const resultsBox = document.getElementById('search-results');
+            if (resultsBox.classList.contains('hidden')) return;
+
+            const items = resultsBox.getElementsByClassName('search-item');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                searchSelectedIndex++;
+                if (searchSelectedIndex >= items.length) searchSelectedIndex = 0;
+                updateSearchSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                searchSelectedIndex--;
+                if (searchSelectedIndex < 0) searchSelectedIndex = items.length - 1;
+                updateSearchSelection(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (searchSelectedIndex >= 0 && searchSelectedIndex < items.length) {
+                    items[searchSelectedIndex].click();
+                } else if (items.length > 0) {
+                    // Default to selecting the first item if enter is pressed
+                    items[0].click();
+                }
+            }
+        }
+
+        function updateSearchSelection(items) {
+            for (let i = 0; i < items.length; i++) {
+                if (i === searchSelectedIndex) {
+                    items[i].classList.add('bg-zinc-700');
+                    items[i].scrollIntoView({ block: 'nearest' });
+                } else {
+                    items[i].classList.remove('bg-zinc-700');
+                }
+            }
+        }
+
+        function selectCard(card) {
+            // Hide dropdown and clear search box
+            document.getElementById('search-results').classList.add('hidden');
+            document.getElementById('card-search').value = '';
+            
+            // Switch from placeholder to actual preview
+            document.getElementById('preview-placeholder').classList.add('hidden');
+            const previewContainer = document.getElementById('card-preview');
+            previewContainer.classList.remove('hidden');
+            previewContainer.classList.add('flex');
+            
+            // Populate data
+            document.getElementById('preview-img').src = card.card_images[0].image_url;
+            document.getElementById('preview-name').textContent = card.name;
+            
+            // Populate stats
+            const statsEl = document.getElementById('preview-stats');
+            statsEl.innerHTML = '';
+            statsEl.classList.remove('hidden');
+            
+            if (card.type && card.type.includes("Monster")) {
+                let levelStr = "";
+                if (card.type.includes("XYZ")) levelStr = `Rank ${card.level}`;
+                else if (card.type.includes("Link")) levelStr = `Link-${card.linkval}`;
+                else if (card.level !== undefined) levelStr = `Level ${card.level}`;
+
+                let atkDefStr = `ATK ${card.atk !== undefined ? card.atk : '?'}`;
+                if (card.def !== undefined) atkDefStr += ` / DEF ${card.def}`;
+
+                statsEl.innerHTML = `
+                    ${card.attribute ? `<span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.attribute}</span>` : ''}
+                    ${levelStr ? `<span class="bg-zinc-800 px-1 rounded border border-zinc-700">${levelStr}</span>` : ''}
+                    <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.race} / ${card.type.replace(' Monster', '')}</span>
+                    <span class="bg-zinc-800 px-1 rounded border border-zinc-700 font-bold text-amber-200">${atkDefStr}</span>
+                `;
+            } else if (card.type && (card.type.includes("Spell") || card.type.includes("Trap"))) {
+                statsEl.innerHTML = `
+                    <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.type}</span>
+                    <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.race}</span>
+                `;
+            } else {
+                statsEl.classList.add('hidden');
+            }
+
+            document.getElementById('preview-desc').textContent = card.desc;
+            
+            // Log action (avoid spam if re-clicking the same card)
+            if (cardHistory.length === 0 || cardHistory[0].id !== card.id) {
+                addLog('System', `Viewed card: <span class="font-bold text-cyan-300">${card.name}</span>`);
+            }
+            
+            // Update History
+            updateCardHistory(card);
+        }
+
+        function updateCardHistory(card) {
+            // Remove if exists to bring to front
+            cardHistory = cardHistory.filter(c => c.id !== card.id);
+            cardHistory.unshift(card); // Add to beginning
+            
+            // Keep max 20 cards in history
+            if (cardHistory.length > 20) cardHistory.pop();
+            
+            renderCardHistory();
+        }
+
+        function renderCardHistory() {
+            const list = document.getElementById('card-history-list');
+            const emptyState = document.getElementById('empty-history');
+            
+            if (cardHistory.length > 0) {
+                emptyState.classList.add('hidden');
+                list.classList.remove('hidden');
+            } else {
+                emptyState.classList.remove('hidden');
+                list.classList.add('hidden');
+            }
+            
+            list.innerHTML = '';
+            cardHistory.forEach(c => {
+                const li = document.createElement('li');
+                li.className = 'hover:bg-zinc-800/60 group transition cursor-pointer rounded flex items-center gap-2 p-1';
+                li.onclick = () => selectCard(c);
+                
+                // Bullet
+                const bullet = document.createElement('span');
+                bullet.className = 'text-zinc-600 text-[8px] shrink-0';
+                bullet.innerHTML = '&#9679;';
+                
+                // Icon (Force cropped artwork directly via card ID)
+                const img = document.createElement('img');
+                img.src = `https://images.ygoprodeck.com/images/cards_cropped/${c.id}.jpg`;
+                img.onerror = function() {
+                    // Fallback to small full-card image if cropped art is missing from the database
+                    this.src = c.card_images[0].image_url_small;
+                };
+                img.className = 'w-9 h-9 rounded-sm object-cover shrink-0 border border-zinc-700 bg-zinc-950';
+                
+                // Text
+                const span = document.createElement('span');
+                span.className = 'truncate text-[16px] flex-1 group-hover:text-cyan-400 transition';
+                span.textContent = c.name;
+                
+                li.appendChild(bullet);
+                li.appendChild(img);
+                li.appendChild(span);
+                list.appendChild(li);
+            });
+        }
+
+        // Close search results if clicking outside
+        document.addEventListener('click', (e) => {
+            const searchContainer = document.getElementById('search-results');
+            const searchInput = document.getElementById('card-search');
+            if (searchContainer && !searchContainer.contains(e.target) && e.target !== searchInput) {
+                searchContainer.classList.add('hidden');
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            openCalc(1); // Default to editing P1. Webcam/LP init is now delayed until launchRoom()
+        });
+
+        // --- Drag & Snap to Corner Logic ---
+        let dragState = { active: false, el: null, container: null, playerNum: null, startX: 0, startY: 0, initialLeft: 0, initialTop: 0, moved: false };
+
+        function startDrag(e, playerNum) {
+            dragState.active = true;
+            dragState.moved = false;
+            dragState.playerNum = playerNum;
+            dragState.el = document.getElementById(`p${playerNum}-lp-wrapper`);
+            dragState.container = document.getElementById(`p${playerNum}-container`);
+            
+            // Support both pointer/mouse and touch events
+            dragState.startX = e.clientX || (e.touches && e.touches[0].clientX);
+            dragState.startY = e.clientY || (e.touches && e.touches[0].clientY);
+            
+            const rect = dragState.el.getBoundingClientRect();
+            const containerRect = dragState.container.getBoundingClientRect();
+            
+            dragState.initialLeft = rect.left - containerRect.left;
+            dragState.initialTop = rect.top - containerRect.top;
+
+            // Disable CSS transitions while dragging for instant 1:1 movement
+            dragState.el.style.transition = 'none';
+            dragState.el.style.zIndex = '50'; // Bring to front while dragging
+            
+            // Lock to px coordinates for free dragging
+            dragState.el.style.left = dragState.initialLeft + 'px';
+            dragState.el.style.top = dragState.initialTop + 'px';
+            dragState.el.style.right = 'auto';
+            dragState.el.style.bottom = 'auto';
+            
+            // Remove Tailwind positioning classes temporarily so they don't fight inline styles
+            dragState.el.classList.remove('top-1', 'bottom-1', 'left-1', 'right-1');
+        }
+
+        function onDrag(e) {
+            if (!dragState.active) return;
+            
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX) || dragState.startX;
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY) || dragState.startY;
+            
+            const dx = clientX - dragState.startX;
+            const dy = clientY - dragState.startY;
+            
+            // Allow a small deadzone before considering it a 'drag' to preserve regular clicks
+            if (!dragState.moved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                dragState.moved = true;
+            }
+            
+            if (dragState.moved) {
+                if (e.cancelable) e.preventDefault(); // Prevent page scrolling on mobile while dragging
+                dragState.el.style.left = (dragState.initialLeft + dx) + 'px';
+                dragState.el.style.top = (dragState.initialTop + dy) + 'px';
+            }
+        }
+
+        function endDrag(e) {
+            if (!dragState.active) return;
+            
+            if (!dragState.moved) {
+                // If they barely moved the mouse, treat it as a normal click to open the calculator
+                openCalc(dragState.playerNum);
+            }
+            
+            // Always calculate and snap to the nearest corner on drop
+            snapToCorner(dragState.el, dragState.container);
+            
+            // Restore smooth transitions so it glides perfectly into the corner
+            dragState.el.style.transition = '';
+            dragState.el.style.zIndex = '20';
+            
+            dragState.active = false;
+            dragState.el = null;
+        }
+
+        function snapToCorner(el, container) {
+            const elRect = el.getBoundingClientRect();
+            const cRect = container.getBoundingClientRect();
+            
+            // Find the center point of the element relative to its video container
+            const centerX = elRect.left + elRect.width / 2 - cRect.left;
+            const centerY = elRect.top + elRect.height / 2 - cRect.top;
+            
+            // Determine which quadrant it is currently floating in
+            const isLeft = centerX < cRect.width / 2;
+            const isTop = centerY < cRect.height / 2;
+            
+            // Clear any inline pixel styles from dragging
+            el.style.left = '';
+            el.style.top = '';
+            el.style.right = '';
+            el.style.bottom = '';
+            
+            // Clean slate: clear all corner classes before applying new ones
+            el.classList.remove('top-1', 'bottom-1', 'left-1', 'right-1');
+            
+            // Apply the new corner constraints based on the drop quadrant
+            if (isTop) el.classList.add('top-1');
+            else el.classList.add('bottom-1');
+            
+            if (isLeft) el.classList.add('left-1');
+            else el.classList.add('right-1');
+        }
+
+        // Use passive: false so we can preventDefault() and stop mobile scrolling
+        document.addEventListener('pointermove', onDrag, { passive: false });
+        document.addEventListener('pointerup', endDrag);
+        document.addEventListener('pointercancel', endDrag);
+
+        // --- Spacebar Next Turn Logic ---
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && duelActive && !isRouletteSpinning) {
+                // Prevent the spacebar from accidentally triggering if the user is typing in chat or the LP calculator
+                if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+                    return;
+                }
+                e.preventDefault(); // Prevents page from jumping downwards
+                passTurn();
+            }
+        });
+
+        // --- Deck Master Logic ---
+        let targetDMPlayer = null;
+        let dmSearchTimeout;
+        let dmSelectedIndex = -1;
+
+        function openDMSearch(playerNum) {
+            targetDMPlayer = playerNum;
+            const modal = document.getElementById('dm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            const input = document.getElementById('dm-search-input');
+            input.value = '';
+            input.focus();
+            document.getElementById('dm-search-results').innerHTML = '<div class="text-zinc-600 text-xs italic text-center py-4">Type a card name to search...</div>';
+        }
+
+        function closeDMSearch() {
+            const modal = document.getElementById('dm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            targetDMPlayer = null;
+        }
+
+        function filterLobby(format) {
+            // Update active button styling
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.trim() === format || (format === 'All' && btn.textContent.trim() === 'All Formats')) {
+                    btn.classList.remove('bg-zinc-900', 'border-zinc-800', 'text-zinc-500');
+                    btn.classList.add('active', 'bg-zinc-800', 'border-cyan-500', 'text-cyan-300', 'shadow-[0_0_10px_rgba(6,182,212,0.3)]');
+                } else {
+                    btn.classList.remove('active', 'bg-zinc-800', 'border-cyan-500', 'text-cyan-300', 'shadow-[0_0_10px_rgba(6,182,212,0.3)]');
+                    btn.classList.add('bg-zinc-900', 'border-zinc-800', 'text-zinc-500');
+                }
+            });
+
+            // Filter the room list
+            const rooms = document.querySelectorAll('.room-card');
+            rooms.forEach(room => {
+                if (format === 'All' || room.dataset.format === format) {
+                    room.classList.remove('hidden');
+                    room.classList.add('flex');
+                } else {
+                    room.classList.add('hidden');
+                    room.classList.remove('flex');
+                }
+            });
+        }
+
+        async function searchDMCard(query) {
+            clearTimeout(dmSearchTimeout);
+            const resultsBox = document.getElementById('dm-search-results');
+            
+            if (!query || query.length < 3) {
+                resultsBox.innerHTML = '<div class="text-zinc-600 text-xs italic text-center py-4">Type a card name to search...</div>';
+                dmSelectedIndex = -1;
+                return;
+            }
+            
+            dmSearchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(query)}&num=15&offset=0`);
+                    if (!res.ok) throw new Error('No cards found');
+                    const data = await res.json();
+                    
+                    // Filter strictly for Monsters
+                    const monsters = data.data.filter(c => c.type && c.type.includes("Monster"));
+                    
+                    resultsBox.innerHTML = '';
+                    dmSelectedIndex = -1;
+                    
+                    if(monsters.length === 0) {
+                        resultsBox.innerHTML = '<div class="p-2 text-xs text-zinc-500 italic">No monsters found...</div>';
+                        return;
+                    }
+
+                    monsters.slice(0, 10).forEach(card => {
+                        const div = document.createElement('div');
+                        div.className = 'dm-search-item flex items-center gap-2 p-2 hover:bg-zinc-800 cursor-pointer rounded transition border border-transparent';
+                        div.onclick = () => selectDMCard(card);
+                        
+                        const img = document.createElement('img');
+                        img.src = `https://images.ygoprodeck.com/images/cards_cropped/${card.id}.jpg`;
+                        img.onerror = function() { this.src = card.card_images[0].image_url_small; }; // fallback if cropped art missing
+                        img.className = 'w-8 h-8 rounded-full object-cover shrink-0 border border-zinc-700 bg-zinc-950';
+                        
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'text-sm text-zinc-200 font-semibold truncate';
+                        nameSpan.textContent = card.name;
+                        
+                        div.appendChild(img);
+                        div.appendChild(nameSpan);
+                        resultsBox.appendChild(div);
+                    });
+                } catch (err) {
+                    resultsBox.innerHTML = '<div class="p-2 text-xs text-zinc-500 italic">No matches found...</div>';
+                    dmSelectedIndex = -1;
+                }
+            }, 400);
+        }
+
+        function handleDMSearchKey(e) {
+            const resultsBox = document.getElementById('dm-search-results');
+            const items = resultsBox.getElementsByClassName('dm-search-item');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                dmSelectedIndex++;
+                if (dmSelectedIndex >= items.length) dmSelectedIndex = 0;
+                updateDMSearchSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                dmSelectedIndex--;
+                if (dmSelectedIndex < 0) dmSelectedIndex = items.length - 1;
+                updateDMSearchSelection(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (dmSelectedIndex >= 0 && dmSelectedIndex < items.length) {
+                    items[dmSelectedIndex].click();
+                } else if (items.length > 0) {
+                    items[0].click();
+                }
+            }
+        }
+
+        function updateDMSearchSelection(items) {
+            for (let i = 0; i < items.length; i++) {
+                if (i === dmSelectedIndex) {
+                    items[i].classList.add('bg-zinc-800', 'border-amber-500/50');
+                    items[i].classList.remove('border-transparent');
+                    items[i].scrollIntoView({ block: 'nearest' });
+                } else {
+                    items[i].classList.remove('bg-zinc-800', 'border-amber-500/50');
+                    items[i].classList.add('border-transparent');
+                }
+            }
+        }
+
+        function selectDMCard(card) {
+            if(!targetDMPlayer) return;
+            
+            const imgEl = document.getElementById(`p${targetDMPlayer}-dm-img`);
+            imgEl.src = `https://images.ygoprodeck.com/images/cards_cropped/${card.id}.jpg`;
+            imgEl.onerror = function() { this.src = card.card_images[0].image_url_small; };
+            imgEl.classList.remove('hidden');
+            
+            let pColor = 'text-blue-400';
+            if(targetDMPlayer === 2) pColor = 'text-red-500';
+            if(targetDMPlayer === 3) pColor = 'text-yellow-400';
+            if(targetDMPlayer === 4) pColor = 'text-purple-400';
+            if(targetDMPlayer === 5) pColor = 'text-orange-500';
+            if(targetDMPlayer === 6) pColor = 'text-pink-500';
+
+            addLog(`P${targetDMPlayer}`, `set <span class="font-bold ${pColor} drop-shadow-sm">${card.name}</span> as their Deck Master!`, 'text-amber-200');
+            
+            closeDMSearch();
+        }
+
+    </script>
+</body>
+</html>
