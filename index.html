@@ -1084,8 +1084,8 @@
                 videoEl.muted = true; // DO NOT HEAR YOURSELF
                 videoEl.autoplay = true;
                 
-                // Apply a local mirror effect (if not manually flipped)
-                videoEl.style.transform = isFlipped[mySeat] ? 'scaleY(-1)' : 'scaleX(-1)';
+                // Apply flip settings without any automatic mirroring
+                videoEl.style.transform = isFlipped[mySeat] ? 'scaleY(-1)' : 'none';
                 
                 videoEl.classList.remove('hidden');
                 placeholder.classList.add('hidden');
@@ -1203,7 +1203,7 @@
             isFlipped[playerNum] = !isFlipped[playerNum];
             
             const videoEl = document.getElementById(`p${playerNum}-video`);
-            if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleX(-1) scaleY(-1)' : 'scaleX(-1)';
+            if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleY(-1)' : 'none';
         }
 
         // --- Interaction Locking ---
