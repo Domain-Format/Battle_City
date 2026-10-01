@@ -662,6 +662,78 @@
         let activeCalcPlayer = null;
         let dmCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 
+        // --- Missing State Restored ---
+        let timerInterval = null;
+        let duelStartTime = null;
+        let duelActive = false;
+        let isEliminated = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+        let isRouletteSpinning = false;
+        let activePlayerTurn = null;
+        let clockwiseOrder = [1, 2, 3, 4, 5, 6];
+        let playerGridPositions = [1, 2, 3, 4, 5, 6];
+        let searchTimeout = null;
+        let cardHistory = [];
+        let searchSelectedIndex = -1;
+        let targetDMPlayer = null;
+        let dmSearchTimeout = null;
+        let dmSelectedIndex = -1;
+        let yugiPassUser = null;
+        let isLogCollapsed = true;
+
+        // --- Logging System Restored ---
+        function addLog(actor, message, colorClass = 'text-zinc-300') {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+            const entry = document.createElement('div');
+            entry.className = `p-2 rounded bg-zinc-950/50 border border-zinc-800/50 ${colorClass}`;
+            
+            if(logEl.children.length === 1 && logEl.children[0].classList.contains('italic')) {
+                logEl.innerHTML = '';
+            }
+
+            let prefix = '';
+            if (actor === 'P1') prefix = '<span class="text-blue-400 font-bold drop-shadow-[0_0_5px_rgba(96,165,250,0.8)]">[P1]</span> ';
+            else if (actor === 'P2') prefix = '<span class="text-red-500 font-bold drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]">[P2]</span> ';
+            else if (actor === 'P3') prefix = '<span class="text-yellow-400 font-bold drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">[P3]</span> ';
+            else if (actor === 'P4') prefix = '<span class="text-purple-400 font-bold drop-shadow-[0_0_5px_rgba(192,132,252,0.8)]">[P4]</span> ';
+            else if (actor === 'P5') prefix = '<span class="text-orange-500 font-bold drop-shadow-[0_0_5px_rgba(249,115,22,0.8)]">[P5]</span> ';
+            else if (actor === 'P6') prefix = '<span class="text-pink-500 font-bold drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]">[P6]</span> ';
+            else if (actor === 'System') prefix = '<span class="text-zinc-400 font-bold">[SYS]</span> ';
+
+            entry.innerHTML = `<span class="text-zinc-600 text-[10px] mr-1">${time}</span> ${prefix}${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog(e) {
+            if (e) e.stopPropagation();
+            logEl.innerHTML = '<div class="text-zinc-500 italic">Log cleared.</div>';
+        }
+
+        function toggleLog() {
+            isLogCollapsed = !isLogCollapsed;
+            const panel = document.getElementById('log-panel');
+            const logContent = document.getElementById('duel-log');
+            const chevron = document.getElementById('log-chevron');
+            const chatInput = document.getElementById('chat-input-container');
+
+            if (isLogCollapsed) {
+                logContent.classList.add('hidden');
+                logContent.classList.remove('flex');
+                chatInput.classList.add('hidden');
+                chatInput.classList.remove('flex');
+                panel.classList.remove('flex-1', 'min-h-0');
+                chevron.style.transform = 'rotate(-90deg)';
+            } else {
+                logContent.classList.remove('hidden');
+                logContent.classList.add('flex');
+                chatInput.classList.remove('hidden');
+                chatInput.classList.add('flex');
+                panel.classList.add('flex-1', 'min-h-0');
+                chevron.style.transform = 'rotate(0deg)';
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+        }
+
         // --- WebRTC State ---
         const rtcConfig = {
             iceServers: [
@@ -1135,6 +1207,8 @@
         }
 
         // --- Interaction Locking ---
+        let dragState = { active: false, el: null, container: null, playerNum: null, startX: 0, startY: 0, initialLeft: 0, initialTop: 0, moved: false };
+
         function startDrag(e, playerNum) {
             if (playerNum !== mySeat) return; // Only drag your own LP box
             dragState.active = true;
