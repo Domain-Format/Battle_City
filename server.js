@@ -44,6 +44,7 @@ io.on('connection', (socket) => {
             isPrivate: roomConfig.isPrivate,
             allowSpectators: roomConfig.allowSpectators,
             peers: [socket.id],
+            // Track exact seat assignments
             players: { [socket.id]: { seat: hostSeat, name: roomConfig.hostName || "Host" } },
             availableSeats: availableSeats
         };
@@ -111,7 +112,7 @@ io.on('connection', (socket) => {
         if (room.peers.includes(socket.id)) {
             const playerData = room.players[socket.id];
             if (playerData) {
-                // Return their seat to the pool and re-sort it
+                // Return their seat to the pool and re-sort it so the lowest seat is taken next
                 room.availableSeats.push(playerData.seat);
                 room.availableSeats.sort((a, b) => a - b);
                 
@@ -145,7 +146,3 @@ function getPublicRooms() {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Battle City Matchmaker Server running on port ${PORT}`));
-```eof
-
-### 2. The Frontend Update (`index.html`)
-The frontend has been completely untethered from Player 1. The HTML blocks for players 1 through 6 are now totally identical, and your permissions, Life Points, and camera will automatically snap to whichever seat the Matchmaker assigns you!
