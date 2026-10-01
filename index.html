@@ -200,20 +200,20 @@
 
                     <!-- Combined Floating Name & LP -->
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p1-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <div id="p1-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 1)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p1-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p1-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
                                 <div id="p1-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
-                                    <div class="flex items-center gap-1.5">
+                            <div class="flex flex-col justify-center w-full min-w-[120px]">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
                                         <h2 id="p1-name" class="font-display text-base text-zinc-300 m-0 leading-none">P1</h2>
                                     </div>
-                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-1" onclick="toggleMenu(1)" class="hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-1" onclick="toggleMenu(1)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-1" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -234,7 +234,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-blue-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(96,165,250,0.8)] pointer-events-none" id="p1-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p1-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -261,20 +261,20 @@
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
                     <div class="absolute bottom-1 left-1 z-20 transition-all duration-300 ease-out" id="p2-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <div id="p2-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 2)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p2-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p2-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
                                 <div id="p2-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
-                                    <div class="flex items-center gap-1.5">
+                            <div class="flex flex-col justify-center w-full min-w-[120px]">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
                                         <h2 id="p2-name" class="font-display text-base text-zinc-300 m-0 leading-none">P2</h2>
                                     </div>
-                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-2" onclick="toggleMenu(2)" class="hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-2" onclick="toggleMenu(2)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-2" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -295,7 +295,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-red-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] pointer-events-none" id="p2-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p2-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -322,20 +322,20 @@
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
                     <div class="absolute top-1 right-1 z-20 transition-all duration-300 ease-out" id="p3-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <div id="p3-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 3)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p3-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p3-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
                                 <div id="p3-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
-                                    <div class="flex items-center gap-1.5">
+                            <div class="flex flex-col justify-center w-full min-w-[120px]">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]"></span>
                                         <h2 id="p3-name" class="font-display text-base text-zinc-300 m-0 leading-none">P3</h2>
                                     </div>
-                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-3" onclick="toggleMenu(3)" class="hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-3" onclick="toggleMenu(3)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-3" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -356,7 +356,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-yellow-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] pointer-events-none" id="p3-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p3-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -383,20 +383,20 @@
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
                     <div class="absolute top-1 left-1 z-20 transition-all duration-300 ease-out" id="p4-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <div id="p4-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 4)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p4-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p4-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
                                 <div id="p4-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
-                                    <div class="flex items-center gap-1.5">
+                            <div class="flex flex-col justify-center w-full min-w-[120px]">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]"></span>
                                         <h2 id="p4-name" class="font-display text-base text-zinc-300 m-0 leading-none">P4</h2>
                                     </div>
-                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-4" onclick="toggleMenu(4)" class="hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-4" onclick="toggleMenu(4)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-4" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -417,7 +417,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-purple-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(192,132,252,0.8)] pointer-events-none" id="p4-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p4-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -444,20 +444,20 @@
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p5-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <div id="p5-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 5)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p5-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p5-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
                                 <div id="p5-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
-                                    <div class="flex items-center gap-1.5">
+                            <div class="flex flex-col justify-center w-full min-w-[120px]">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span>
                                         <h2 id="p5-name" class="font-display text-base text-zinc-300 m-0 leading-none">P5</h2>
                                     </div>
-                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-5" onclick="toggleMenu(5)" class="hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-5" onclick="toggleMenu(5)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-5" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -478,7 +478,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-orange-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(249,115,22,0.8)] pointer-events-none" id="p5-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p5-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -502,20 +502,20 @@
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p6-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <div id="p6-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 6)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p6-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p6-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
                                 <div id="p6-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
-                                    <div class="flex items-center gap-1.5">
+                            <div class="flex flex-col justify-center w-full min-w-[120px]">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
                                         <h2 id="p6-name" class="font-display text-base text-zinc-300 m-0 leading-none">P6</h2>
                                     </div>
-                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-6" onclick="toggleMenu(6)" class="hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-6" onclick="toggleMenu(6)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-6" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -536,7 +536,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-pink-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(236,72,153,0.8)] pointer-events-none" id="p6-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p6-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -662,6 +662,7 @@
     </div>
 
     <script>
+        // --- Core State ---
         let totalPlayers = 4;
         let mySeat = null; 
         let roomPlayers = {}; 
@@ -1556,9 +1557,9 @@
                 const wrapper = document.getElementById(`p${i}-lp-wrapper`);
                 if(wrapper) {
                     const innerBox = wrapper.firstElementChild;
-                    innerBox.classList.add('bg-zinc-900/85', 'hover:bg-zinc-800', 'border-zinc-700/50'); innerBox.classList.remove('bg-red-950/90', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
-                    const lpText = document.getElementById(`p${i}-lp`); let pColor = 'text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]'; if(i === 2) pColor = 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]'; if(i === 3) pColor = 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]'; if(i === 4) pColor = 'text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]'; if(i === 5) pColor = 'text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]'; if(i === 6) pColor = 'text-pink-500 drop-shadow-[0_0_10px_rgba(236,72,153,0.8)]';
-                    lpText.className = `font-display text-5xl leading-none tracking-wider pointer-events-none ${pColor}`;
+                    innerBox.classList.add('bg-zinc-900/[0.35]', 'hover:bg-zinc-900/50', 'border-zinc-700/50');
+                    innerBox.classList.remove('bg-zinc-900/85', 'hover:bg-zinc-800', 'bg-red-950/90', 'bg-red-950/70', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+                    const lpText = document.getElementById(`p${i}-lp`);
                 }
             }
             const btn = document.getElementById('start-duel-btn'); btn.classList.add('hidden'); btn.textContent = 'DUEL!';
@@ -1596,12 +1597,12 @@
         function eliminatePlayerId(playerNum, emit = true) {
             if (isEliminated[playerNum]) return;
             isEliminated[playerNum] = true; lp[playerNum] = 0; updateLPDisplay(playerNum);
-            const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`); const innerBox = wrapper.firstElementChild;
-            innerBox.classList.remove('bg-zinc-900/85', 'hover:bg-zinc-800', 'border-zinc-700/50', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]'); innerBox.classList.add('bg-red-950/90', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]');
-            const lpText = document.getElementById(`p${playerNum}-lp`); lpText.className = 'font-display text-5xl leading-none tracking-wider drop-shadow-md line-through text-red-600 opacity-70';
-            if (emit) { addLog(`P${playerNum}`, 'has been ELIMINATED!', 'text-red-500 font-bold uppercase'); if (socket && currentRoomId) socket.emit('eliminate-player', currentRoomId, { seat: playerNum }); }
-            if (activePlayerTurn === playerNum) { activePlayerTurn = null; passTurn(playerNum); }
-            checkWinCondition();
+            const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
+            const innerBox = wrapper.firstElementChild;
+            innerBox.classList.remove('bg-zinc-900/85', 'bg-zinc-900/50', 'bg-zinc-900/[0.35]', 'hover:bg-zinc-800', 'hover:bg-zinc-900/70', 'hover:bg-zinc-900/50', 'border-zinc-700/50', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+            innerBox.classList.add('bg-red-950/70', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]');
+            const lpText = document.getElementById(`p${playerNum}-lp`);
+            lpText.className = 'font-display text-5xl leading-none tracking-wider drop-shadow-md line-through text-red-600 opacity-70';
         }
         function eliminateActivePlayer() { if (!activeCalcPlayer) return; eliminatePlayerId(activeCalcPlayer); clearCalc(); }
 
