@@ -1,5 +1,5 @@
- <style>
-        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;500;700&display=swap');
+
+       @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;500;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
@@ -31,4 +31,3 @@
         .bottom-1 .cam-menu-dropdown { bottom: 100%; top: auto; margin-bottom: 0.5rem; }
         .left-1 .cam-menu-dropdown { left: 0; right: auto; }
         .right-1 .cam-menu-dropdown { right: 0; left: auto; }
-    </style>
