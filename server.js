@@ -24,12 +24,8 @@ io.on('connection', (socket) => {
     // 1. Hosting a Room
     socket.on('create-room', (roomConfig) => {
         const roomId = `room_${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Build an array of available seats based on room size [1, 2, 3, 4]
         let availableSeats = [];
         for(let i = 1; i <= roomConfig.maxPlayers; i++) availableSeats.push(i);
-
-        // Host takes Seat 1
         const hostSeat = availableSeats.shift();
 
         activeRooms[roomId] = {
@@ -44,14 +40,22 @@ io.on('connection', (socket) => {
             isPrivate: roomConfig.isPrivate,
             allowSpectators: roomConfig.allowSpectators,
             peers: [socket.id],
-            players: { [socket.id]: { seat: hostSeat, name: roomConfig.hostName || "Host", isFlipped: false } },
+            players: { 
+                [socket.id]: { 
+                    seat: hostSeat, 
+                    name: roomConfig.hostName || "Host", 
+                    isFlipped: false,
+                    lp: 8000,
+                    dmCount: 0,
+                    dmCard: null,
+                    isEliminated: false
+                } 
+            },
             availableSeats: availableSeats
         };
 
         socket.join(roomId);
         socket.emit('room-created', roomId);
-        
-        // Tell the host they joined successfully and give them their assigned seat
         socket.emit('room-joined', activeRooms[roomId], hostSeat);
         io.emit('lobby-update', getPublicRooms());
     });
@@ -67,33 +71,71 @@ io.on('connection', (socket) => {
             socket.to(roomId).emit('spectator-joined', socket.id);
             socket.emit('room-joined', room, null);
         } else {
-            if (room.currentPlayers >= room.maxPlayers) {
-                return socket.emit('error', 'Room is full');
-            }
+            if (room.currentPlayers >= room.maxPlayers) return socket.emit('error', 'Room is full');
             
-            // Grab the lowest available seat for the new player
             const guestSeat = room.availableSeats.shift();
-            
             room.currentPlayers++;
             room.peers.push(socket.id);
-            room.players[socket.id] = { seat: guestSeat, name: guestName || "Player", isFlipped: false };
+            room.players[socket.id] = { 
+                seat: guestSeat, 
+                name: guestName || "Player", 
+                isFlipped: false,
+                lp: 8000,
+                dmCount: 0,
+                dmCard: null,
+                isEliminated: false
+            };
             
             socket.join(roomId);
-            
-            // Tell others a new player joined and WHICH SEAT they are in
             socket.to(roomId).emit('player-joined', { newPlayerId: socket.id, seat: guestSeat, name: guestName });
-            // Tell the new player they joined and what seat they got
             socket.emit('room-joined', room, guestSeat);
         }
         io.emit('lobby-update', getPublicRooms());
     });
 
-    // Synchronize Layout Grid
-    socket.on('sync-layout', (roomId, layoutPositions) => {
-        socket.to(roomId).emit('sync-layout', layoutPositions);
+    // --- GAME STATE SYNCHRONIZATION ---
+    socket.on('update-lp', (roomId, data) => {
+        const room = activeRooms[roomId];
+        if (room) {
+            const p = Object.values(room.players).find(p => p.seat === data.seat);
+            if (p) p.lp = data.lp;
+            socket.to(roomId).emit('update-lp', data);
+        }
     });
 
-    // Synchronize Camera Flips
+    socket.on('update-dm-count', (roomId, data) => {
+        const room = activeRooms[roomId];
+        if (room) {
+            const p = Object.values(room.players).find(p => p.seat === data.seat);
+            if (p) p.dmCount = data.dmCount;
+            socket.to(roomId).emit('update-dm-count', data);
+        }
+    });
+
+    socket.on('set-dm-card', (roomId, data) => {
+        const room = activeRooms[roomId];
+        if (room) {
+            const p = Object.values(room.players).find(p => p.seat === data.seat);
+            if (p) p.dmCard = data.card;
+            socket.to(roomId).emit('set-dm-card', data);
+        }
+    });
+
+    socket.on('eliminate-player', (roomId, data) => {
+        const room = activeRooms[roomId];
+        if (room) {
+            const p = Object.values(room.players).find(p => p.seat === data.seat);
+            if (p) { p.isEliminated = true; p.lp = 0; }
+            socket.to(roomId).emit('eliminate-player', data);
+        }
+    });
+
+    socket.on('dice-roll', (roomId, data) => socket.to(roomId).emit('dice-roll', data));
+    socket.on('coin-flip', (roomId, data) => socket.to(roomId).emit('coin-flip', data));
+    socket.on('send-chat', (roomId, data) => socket.to(roomId).emit('receive-chat', data));
+    
+    // Synchronize Layout Grid & Cameras
+    socket.on('sync-layout', (roomId, layoutPositions) => socket.to(roomId).emit('sync-layout', layoutPositions));
     socket.on('flip-camera', (roomId, isFlippedState) => {
         const room = activeRooms[roomId];
         if (room && room.players[socket.id]) {
@@ -120,10 +162,8 @@ io.on('connection', (socket) => {
         if (room.peers.includes(socket.id)) {
             const playerData = room.players[socket.id];
             if (playerData) {
-                // Return their seat to the pool and re-sort it so the lowest seat is taken next
                 room.availableSeats.push(playerData.seat);
                 room.availableSeats.sort((a, b) => a - b);
-                
                 delete room.players[socket.id];
                 socket.to(roomId).emit('player-left', { socketId: socket.id, seat: playerData.seat });
             }
@@ -132,9 +172,7 @@ io.on('connection', (socket) => {
             room.currentPlayers--;
             socket.leave(roomId);
 
-            if (room.currentPlayers <= 0) {
-                delete activeRooms[roomId];
-            }
+            if (room.currentPlayers <= 0) delete activeRooms[roomId];
         } else if (room.spectators > 0) {
             room.spectators--;
             socket.leave(roomId);
