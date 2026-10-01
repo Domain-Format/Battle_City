@@ -5,7 +5,7 @@ const cors = require('cors');
 
 // Initialize Express App
 const app = express();
-app.use(cors()); // Allow your GitHub Pages frontend to talk to this server
+app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
@@ -13,7 +13,7 @@ const server = http.createServer(app);
 // Initialize Socket.io for Real-Time connections
 const io = new Server(server, {
     cors: {
-        origin: "*", // Replace with your GitHub Pages URL in production!
+        origin: "*", 
         methods: ["GET", "POST"]
     }
 });
@@ -21,21 +21,16 @@ const io = new Server(server, {
 // In-memory database to track active duels
 const activeRooms = {}; 
 
-// Example of the structure:
-// activeRooms['room_123'] = {
-//     host: 'SetoKaiba',
-//     format: 'Domain',
-//     maxPlayers: 4,
-//     currentPlayers: 1,
-//     spectators: 0,
-//     isPrivate: false
-// }
-
 io.on('connection', (socket) => {
     console.log(`New user connected to Lobby server: ${socket.id}`);
 
     // Immediately send them the list of public rooms for their Launch Screen
     socket.emit('lobby-update', getPublicRooms());
+
+    // FIX: Listen for manual refresh requests from the client!
+    socket.on('request-lobby-update', () => {
+        socket.emit('lobby-update', getPublicRooms());
+    });
 
     // 1. Hosting a Room
     socket.on('create-room', (roomConfig) => {
@@ -44,7 +39,7 @@ io.on('connection', (socket) => {
         activeRooms[roomId] = {
             id: roomId,
             hostId: socket.id,
-            hostName: roomConfig.hostName,
+            roomName: roomConfig.roomName || "Arena",
             format: roomConfig.format,
             maxPlayers: roomConfig.maxPlayers,
             currentPlayers: 1,
@@ -56,8 +51,6 @@ io.on('connection', (socket) => {
 
         socket.join(roomId);
         socket.emit('room-created', roomId);
-        
-        // Broadcast the new room to everyone else's Launch Screen Lobby
         io.emit('lobby-update', getPublicRooms());
     });
 
@@ -70,6 +63,7 @@ io.on('connection', (socket) => {
             room.spectators++;
             socket.join(roomId);
             socket.to(roomId).emit('spectator-joined', socket.id);
+            socket.emit('room-joined', room);
         } else {
             if (room.currentPlayers >= room.maxPlayers) {
                 return socket.emit('error', 'Room is full');
@@ -78,41 +72,52 @@ io.on('connection', (socket) => {
             room.peers.push(socket.id);
             socket.join(roomId);
             
-            // Tell the existing players to prepare their WebRTC connections
             socket.to(roomId).emit('player-joined', { newPlayerId: socket.id });
+            socket.emit('room-joined', room);
         }
 
-        io.emit('lobby-update', getPublicRooms()); // Update lobby counts
+        io.emit('lobby-update', getPublicRooms());
     });
 
-    // 3. WebRTC Signaling (The crucial part that links cameras)
-    // When Player A generates a video feed, they send an 'offer' through the server to Player B
+    // 3. Handle Manual "Leave Room" Button Clicks
+    socket.on('leave-room', (roomId) => {
+        const room = activeRooms[roomId];
+        if (room) {
+            if (room.peers.includes(socket.id)) {
+                // Remove player
+                room.peers = room.peers.filter(id => id !== socket.id);
+                room.currentPlayers--;
+                socket.to(roomId).emit('player-left', socket.id);
+            } else if (room.spectators > 0) {
+                // Remove spectator
+                room.spectators--;
+            }
+            
+            socket.leave(roomId);
+            
+            // Close room if empty
+            if (room.currentPlayers <= 0) {
+                delete activeRooms[roomId];
+            }
+            io.emit('lobby-update', getPublicRooms());
+        }
+    });
+
+    // 4. WebRTC Signaling
     socket.on('webrtc-offer', (data) => {
-        socket.to(data.targetId).emit('webrtc-offer', {
-            senderId: socket.id,
-            sdp: data.sdp
-        });
+        socket.to(data.targetId).emit('webrtc-offer', { senderId: socket.id, sdp: data.sdp });
     });
 
-    // Player B replies with an 'answer'
     socket.on('webrtc-answer', (data) => {
-        socket.to(data.targetId).emit('webrtc-answer', {
-            senderId: socket.id,
-            sdp: data.sdp
-        });
+        socket.to(data.targetId).emit('webrtc-answer', { senderId: socket.id, sdp: data.sdp });
     });
 
-    // Passing ICE Candidates to bypass firewalls
     socket.on('webrtc-ice-candidate', (data) => {
-        socket.to(data.targetId).emit('webrtc-ice-candidate', {
-            senderId: socket.id,
-            candidate: data.candidate
-        });
+        socket.to(data.targetId).emit('webrtc-ice-candidate', { senderId: socket.id, candidate: data.candidate });
     });
 
-    // 4. Handle Disconnects
+    // 5. Handle Disconnects (Closed tab, refreshed page, etc)
     socket.on('disconnect', () => {
-        // Cleanup logic to remove them from rooms and update the Lobby
         for (const roomId in activeRooms) {
             const room = activeRooms[roomId];
             if (room.peers.includes(socket.id)) {
@@ -120,8 +125,7 @@ io.on('connection', (socket) => {
                 room.currentPlayers--;
                 socket.to(roomId).emit('player-left', socket.id);
                 
-                // Close room if empty
-                if (room.currentPlayers === 0) {
+                if (room.currentPlayers <= 0) {
                     delete activeRooms[roomId];
                 }
             }
@@ -131,48 +135,8 @@ io.on('connection', (socket) => {
 });
 
 function getPublicRooms() {
-    // Return only rooms that are NOT private
     return Object.values(activeRooms).filter(r => !r.isPrivate);
 }
-
-// When you get your real Client ID and Secret from the simorg.ca developers, plug them in here!
-const YUGIPASS_CLIENT_ID = process.env.YUGIPASS_CLIENT_ID || 'YOUR_CLIENT_ID';
-const YUGIPASS_SECRET = process.env.YUGIPASS_SECRET || 'YOUR_SECRET';
-
-app.get('/auth/yugipass', (req, res) => {
-    // 1. Redirect the user to the real YugiPass login screen
-    const redirectUri = encodeURIComponent('https://your-backend-url.onrender.com/auth/yugipass/callback');
-    const authUrl = `https://simorg.ca/oauth/authorize?client_id=${YUGIPASS_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code`;
-    res.redirect(authUrl);
-});
-
-app.get('/auth/yugipass/callback', async (req, res) => {
-    // 2. YugiPass redirects back here with a secure 'code'. We trade it for an access token.
-    const code = req.query.code;
-    
-    // NOTE: This is a pseudo-code implementation of an OAuth token exchange. 
-    // You will need the exact endpoint URL from the simorg.ca documentation.
-    /*
-    try {
-        const tokenResponse = await axios.post('https://simorg.ca/oauth/token', {
-            client_id: YUGIPASS_CLIENT_ID,
-            client_secret: YUGIPASS_SECRET,
-            code: code,
-            grant_type: 'authorization_code'
-        });
-        
-        const userData = await axios.get('https://simorg.ca/api/user', {
-            headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` }
-        });
-
-        // Redirect back to your GitHub Pages frontend with the validated username
-        res.redirect(`https://yourusername.github.io/battle-city-duel/?user=${userData.data.username}&avatar=${userData.data.avatar}`);
-    } catch (err) {
-        res.redirect(`https://yourusername.github.io/battle-city-duel/?error=auth_failed`);
-    }
-    */
-   res.send("OAuth Callback endpoint ready for implementation!");
-});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
