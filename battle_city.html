@@ -679,6 +679,14 @@
     <script>
         // State
         let totalPlayers = 4;
+        const socket = io('https://battle-city-7f80.onrender.com');
+
+socket.on('connect', () => {
+    addLog('System', 'Connected to Global Matchmaking Server!', 'text-emerald-400 font-bold');
+});
+
+socket.on('lobby-update', (rooms) => {
+    console.log("Live Rooms:", rooms);
         let lp = { 1: 8000, 2: 8000, 3: 8000, 4: 8000, 5: 8000, 6: 8000 };
         const logEl = document.getElementById('duel-log');
 
