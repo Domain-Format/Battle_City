@@ -44,8 +44,7 @@ io.on('connection', (socket) => {
             isPrivate: roomConfig.isPrivate,
             allowSpectators: roomConfig.allowSpectators,
             peers: [socket.id],
-            // Track exact seat assignments
-            players: { [socket.id]: { seat: hostSeat, name: roomConfig.hostName || "Host" } },
+            players: { [socket.id]: { seat: hostSeat, name: roomConfig.hostName || "Host", isFlipped: false } },
             availableSeats: availableSeats
         };
 
@@ -77,7 +76,7 @@ io.on('connection', (socket) => {
             
             room.currentPlayers++;
             room.peers.push(socket.id);
-            room.players[socket.id] = { seat: guestSeat, name: guestName || "Player" };
+            room.players[socket.id] = { seat: guestSeat, name: guestName || "Player", isFlipped: false };
             
             socket.join(roomId);
             
@@ -92,6 +91,15 @@ io.on('connection', (socket) => {
     // Synchronize Layout Grid
     socket.on('sync-layout', (roomId, layoutPositions) => {
         socket.to(roomId).emit('sync-layout', layoutPositions);
+    });
+
+    // Synchronize Camera Flips
+    socket.on('flip-camera', (roomId, isFlippedState) => {
+        const room = activeRooms[roomId];
+        if (room && room.players[socket.id]) {
+            room.players[socket.id].isFlipped = isFlippedState;
+            socket.to(roomId).emit('camera-flipped', { seat: room.players[socket.id].seat, isFlipped: isFlippedState });
+        }
     });
 
     // 3. Handle Leaving
