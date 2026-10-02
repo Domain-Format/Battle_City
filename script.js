@@ -1,11 +1,11 @@
-// --- Core State ---
+//// --- Core State ---
 let totalPlayers = 4;
 let lp = { 1: 8000, 2: 8000, 3: 8000, 4: 8000, 5: 8000, 6: 8000 };
 const logEl = document.getElementById('duel-log');
 
 let localStream = null;
-let isMicOn = false;
-let isCamOn = false;
+let isMicOn = true;
+let isCamOn = true;
 let isFlipped = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false }; 
 let activeCalcPlayer = null;
 let dmCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
@@ -23,7 +23,7 @@ try {
     myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
 }
 
-// --- WebRTC State ---
+//// --- WebRTC State ---
 const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -40,6 +40,54 @@ let currentRoomId = null;
 const SERVER_URL = 'https://battle-city-7f80.onrender.com';
 
 window.addEventListener('DOMContentLoaded', () => {
+    
+    // Check if the URL contains a room invite link
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteRoom = urlParams.get('room');
+
+    if (inviteRoom) {
+        document.getElementById('right-panel-header').innerHTML = `
+            <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+            JOIN INVITE
+        `;
+        document.getElementById('right-panel-header').classList.replace('text-cyan-400', 'text-emerald-400');
+        
+        // Hide standard host options
+        document.getElementById('host-options').classList.add('hidden');
+        
+        // Change launch button to connect directly to the room
+        const launchBtn = document.getElementById('launch-btn');
+        launchBtn.textContent = 'JOIN DUEL';
+        launchBtn.classList.replace('bg-cyan-700', 'bg-emerald-700');
+        launchBtn.classList.replace('hover:bg-cyan-600', 'hover:bg-emerald-600');
+        launchBtn.classList.replace('border-cyan-400', 'border-emerald-400');
+        launchBtn.classList.replace('text-cyan-50', 'text-emerald-50');
+        launchBtn.style.boxShadow = '0 0 20px rgba(16,185,129,0.4)';
+        launchBtn.onclick = function() { joinServerRoom(inviteRoom, false, this); };
+    }
+
+    openCalc(1);
+
+    for (let i = 2; i <= 6; i++) {
+        const camBtn = document.getElementById(`cam-btn-${i}`);
+        if (camBtn) camBtn.classList.add('hidden');
+        
+        const lpWrapper = document.getElementById(`p${i}-lp-wrapper`);
+        if (lpWrapper) {
+            const innerBox = lpWrapper.firstElementChild;
+            if (innerBox) {
+                innerBox.classList.remove('cursor-grab', 'active:cursor-grabbing');
+                innerBox.classList.add('cursor-default');
+            }
+        }
+        
+        const dmContainer = document.getElementById(`p${i}-dm-container`);
+        if (dmContainer) {
+            dmContainer.classList.remove('cursor-pointer', 'hover:scale-105');
+            dmContainer.title = "Locked: Not your Deck Master";
+        }
+    }
+
     try {
         socket = io(SERVER_URL);
         
@@ -58,10 +106,14 @@ window.addEventListener('DOMContentLoaded', () => {
             addLog('System', `Room registered on server! ID: <span class="text-cyan-300 font-mono">${roomId}</span>`, 'text-emerald-400 font-bold');
         });
 
-        socket.on('room-joined', async (room, mySeat) => {
+        //        socket.on('room-joined', async (room, mySeat) => {
             currentRoomId = room.id;
             totalPlayers = room.maxPlayers;
             peerGridMap = {}; 
+
+            // Modify URL with room invite link silently
+            window.history.pushState({}, '', '?room=' + room.id);
+            document.getElementById('copy-link-btn').classList.remove('hidden');
 
             document.getElementById('setup-modal').classList.add('hidden');
             document.getElementById('setup-modal').classList.remove('flex');
@@ -92,7 +144,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         if (pData) {
                             if (pData.socketId !== socket.id) peerGridMap[pData.socketId] = pData.seat;
                             
-                            const nameEl = document.getElementById(`p${i}-name`) || document.querySelector(`#grid-item-${i} h2.font-display`);
+                            const nameEl = document.getElementById(`p${i}-name`);
                             if (nameEl) nameEl.textContent = pData.name;
                             
                             const placeholder = document.getElementById(`p${i}-placeholder`);
@@ -119,7 +171,7 @@ window.addEventListener('DOMContentLoaded', () => {
                             }
                             if (pData.isEliminated) eliminatePlayerId(i);
                         } else {
-                            const nameEl = document.getElementById(`p${i}-name`) || document.querySelector(`#grid-item-${i} h2.font-display`);
+                            const nameEl = document.getElementById(`p${i}-name`);
                             if (nameEl) nameEl.textContent = `P${i}`;
                             
                             const placeholder = document.getElementById(`p${i}-placeholder`);
@@ -139,7 +191,8 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             if (mySeat === 1 || mySeat) {
-                document.getElementById(`cam-btn-1`).classList.remove('hidden');
+                const btn1 = document.getElementById(`cam-btn-1`);
+                if(btn1) btn1.classList.remove('hidden');
                 activeCalcPlayer = 1;
                 await initWebcam();
             }
@@ -148,9 +201,9 @@ window.addEventListener('DOMContentLoaded', () => {
             addLog('System', `Joined room: ${room.roomName} as P${mySeat || 'Spectator'}`, 'text-emerald-400 font-bold');
         });
 
-        socket.on('player-joined', async (data) => {
+        //        socket.on('player-joined', async (data) => {
             peerGridMap[data.newPlayerId] = data.seat;
-            const nameEl = document.getElementById(`p${data.seat}-name`) || document.querySelector(`#grid-item-${data.seat} h2.font-display`);
+            const nameEl = document.getElementById(`p${data.seat}-name`);
             if (nameEl) nameEl.textContent = data.name;
             
             const placeholder = document.getElementById(`p${data.seat}-placeholder`);
@@ -234,7 +287,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        socket.on('player-dropped', (data) => {
+        //        socket.on('player-dropped', (data) => {
             if (peerConnections[data.socketId]) {
                 peerConnections[data.socketId].close();
                 delete peerConnections[data.socketId];
@@ -261,6 +314,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
         socket.on('error', (msg) => {
             addLog('System', `Server Error: ${msg}`, 'text-red-500 font-bold');
+            if(msg.includes('not found')) {
+                // Remove invalid room ID from URL
+                window.history.pushState({}, '', window.location.pathname);
+            }
         });
 
         // Sync visual layout triggers
@@ -276,8 +333,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- WebRTC Grid Management ---
-function createPeerConnection(targetId) {
+//function createPeerConnection(targetId) {
     if (peerConnections[targetId]) return peerConnections[targetId];
 
     const pc = new RTCPeerConnection(rtcConfig);
@@ -336,7 +392,7 @@ function freeGridSlot(socketId, seat) {
             const span = placeholder.querySelector('span');
             if (span) span.textContent = `Awaiting P${slot}...`;
         }
-        const nameEl = document.getElementById(`p${slot}-name`) || document.querySelector(`#grid-item-${slot} h2.font-display`);
+        const nameEl = document.getElementById(`p${slot}-name`);
         if (nameEl) nameEl.textContent = `P${slot}`;
         
         delete peerGridMap[socketId];
@@ -344,7 +400,23 @@ function freeGridSlot(socketId, seat) {
     }
 }
 
-// --- Lobby & UI Functions ---
+//function copyInviteLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        addLog('System', 'Invite link copied to clipboard!', 'text-emerald-400 font-bold');
+        const btn = document.getElementById('copy-link-btn');
+        const originalHTML = btn.innerHTML;
+        
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> COPIED!`;
+        btn.classList.replace('bg-emerald-900/80', 'bg-emerald-600');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.replace('bg-emerald-600', 'bg-emerald-900/80');
+        }, 2000);
+    });
+}
+
 function updateLobbyUI(rooms) {
     const lobbyList = document.getElementById('lobby-room-list');
     if (!lobbyList) return;
@@ -452,8 +524,7 @@ function logoutYugiPass() {
     document.getElementById('yugipass-user-profile').classList.add('hidden');
 }
 
-// --- Room Initialization ---
-async function launchRoom(btn) {
+//async function launchRoom(btn) {
     if (btn) {
         btn.disabled = true;
         btn.innerText = 'Initializing...';
@@ -569,6 +640,23 @@ function leaveRoom() {
     logEl.innerHTML = '<div class="text-zinc-500 italic">Waiting for room configuration...</div>';
     clearCalc();
     
+    // Remove the room from the URL silently
+    window.history.pushState({}, '', window.location.pathname);
+    document.getElementById('copy-link-btn').classList.add('hidden');
+
+    // Reset setup modal UI incase they had join invite UI showing
+    document.getElementById('right-panel-header').innerHTML = `
+        <svg class="w-10 h-10 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/></svg>
+        HOST ROOM
+    `;
+    document.getElementById('right-panel-header').className = "font-display text-5xl tracking-wider text-cyan-400 uppercase drop-shadow-lg leading-none flex items-center justify-center gap-3";
+    document.getElementById('host-options').classList.remove('hidden');
+    
+    const launchBtn = document.getElementById('launch-btn');
+    launchBtn.textContent = 'Initialize Room';
+    launchBtn.className = "w-full bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 text-cyan-50 font-bold py-3 px-8 rounded-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] transition text-sm tracking-widest uppercase hover:scale-105 transform";
+    launchBtn.onclick = function() { launchRoom(this); };
+
     document.getElementById('setup-modal').classList.remove('hidden');
     document.getElementById('setup-modal').classList.add('flex');
     
@@ -577,7 +665,7 @@ function leaveRoom() {
     isMicOn = false;
 }
 
-function toggleMenu(playerNum) {
+//function toggleMenu(playerNum) {
     if (playerNum !== 1) return;
 
     const menu = document.getElementById(`cam-menu-${playerNum}`);
@@ -615,7 +703,7 @@ function toggleFlip(playerNum) {
     const transformValue = isFlipped[playerNum] ? 'scaleY(-1)' : 'scaleY(1)';
     
     if (playerNum === 1) {
-        const videoEl = document.getElementById('local-video');
+        const videoEl = document.getElementById('p1-video');
         if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleX(-1) scaleY(-1)' : 'scaleX(-1)';
     } else {
         const videoEl = document.getElementById(`p${playerNum}-video`);
@@ -625,11 +713,9 @@ function toggleFlip(playerNum) {
         if (placeholder) placeholder.style.transform = transformValue;
     }
 
-    // Force snap update on flip
-    randomizeSeats(false);
+    randomizeSeats(false); // Snap back to correct object-position relative to flip
 }
 
-// --- Duel Timer & Elimination State ---
 let timerInterval = null;
 let duelStartTime = null;
 let duelActive = false;
@@ -675,20 +761,22 @@ function randomizeSeats(shuffle = true) {
             else lpWrapper.classList.add('left-1'); 
         }
 
-        // Inner Corner Video Snapping
+        // Inner Corner Video Snapping Logic
         let xPos = isLeftCol ? 'right' : (isRightCol ? 'left' : 'center');
         let yPos = isTopRow ? 'bottom' : 'top';
         if (cols === 1) xPos = 'center';
 
+        // Fix logic for P1 specifically because P1 has scaleX(-1) mirror effect natively
         if (playerNum === 1 && cols !== 1) {
             xPos = (xPos === 'right') ? 'left' : (xPos === 'left' ? 'right' : 'center');
         }
 
+        // If flipped, reverse the vertical snapping point
         if (isFlipped[playerNum]) {
             yPos = (yPos === 'top') ? 'bottom' : 'top';
         }
         
-        const videoEl = playerNum === 1 ? document.getElementById('local-video') : document.getElementById(`p${playerNum}-video`);
+        const videoEl = document.getElementById(`p${playerNum}-video`);
         if (videoEl) {
             videoEl.style.objectPosition = `${xPos} ${yPos}`;
             videoEl.style.transition = 'object-position 0.5s ease-out, transform 0.3s';
@@ -704,7 +792,7 @@ function randomizeSeats(shuffle = true) {
     if (shuffle) addLog('System', 'Room seating has been randomized!', 'text-indigo-400 italic font-bold');
 }
 
-function startDuelTimer() {
+//function startDuelTimer() {
     if (duelActive || isRouletteSpinning) return;
     isRouletteSpinning = true;
     
@@ -884,14 +972,13 @@ function eliminateActivePlayer() {
     clearCalc();
 }
 
-// --- Independent Media Controls ---
-let hasInitializedCam = false;
+//let hasInitializedCam = false;
 
 async function initWebcam() {
     if (hasInitializedCam) return;
     hasInitializedCam = true;
 
-    const videoEl = document.getElementById('local-video');
+    const videoEl = document.getElementById('p1-video');
     const errorOverlay = document.getElementById('cam-error-message');
     const errorText = document.getElementById('cam-error-text');
 
@@ -975,7 +1062,7 @@ async function toggleMic() {
 }
 
 async function toggleCam() {
-    const videoEl = document.getElementById('local-video');
+    const videoEl = document.getElementById('p1-video');
     const errorOverlay = document.getElementById('cam-error-message');
     
     if (isCamOn) {
@@ -1023,8 +1110,7 @@ async function toggleCam() {
     }
 }
 
-// --- Logging System ---
-function addLog(actor, message, colorClass = 'text-zinc-300') {
+//function addLog(actor, message, colorClass = 'text-zinc-300') {
     const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
     const entry = document.createElement('div');
     entry.className = `p-2 rounded bg-zinc-950/50 border border-zinc-800/50 ${colorClass}`;
@@ -1078,7 +1164,6 @@ function toggleLog() {
     }
 }
 
-// --- Chat System ---
 function handleChatKey(e) {
     if (e.key === 'Enter') sendChat();
 }
@@ -1099,7 +1184,6 @@ function sendChat() {
     input.focus();
 }
 
-// --- Calculator & LP Management ---
 function openCalc(playerNum) {
     if (playerNum !== 1) {
         addLog('System', `You can only edit your own Life Points!`, 'text-amber-400 font-bold');
@@ -1230,8 +1314,7 @@ function setLP(player, amount) {
     if (lp[player] === 0) eliminatePlayerId(player);
 }
 
-// --- Dice & Coin Effects ---
-function showEffect(playerNum, type, result) {
+//function showEffect(playerNum, type, result) {
     const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
     if (!wrapper) return;
 
@@ -1325,8 +1408,7 @@ function flipCoin() {
     if (socket && currentRoomId) socket.emit('coin-flip', currentRoomId, { seat: p, result: result });
 }
 
-// --- Card Search & Preview ---
-let searchTimeout;
+//let searchTimeout;
 let cardHistory = [];
 let searchSelectedIndex = -1;
 
@@ -1504,8 +1586,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- Drag & Snap to Corner Logic ---
-function startDrag(e, playerNum) {
+//function startDrag(e, playerNum) {
     if (playerNum !== 1) return;
 
     dragState.active = true;
@@ -1608,8 +1689,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// --- Deck Master Logic ---
-let targetDMPlayer = null;
+//let targetDMPlayer = null;
 let dmSearchTimeout;
 let dmSelectedIndex = -1;
 
