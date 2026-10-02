@@ -382,16 +382,29 @@ function createPeerConnection(targetId) {
             const videoEl = document.getElementById(`p${slot}-video`);
             const placeholder = document.getElementById(`p${slot}-placeholder`);
             if (videoEl) {
+                // Prevent AbortError by only assigning the stream if it's genuinely new
                 if (event.streams && event.streams[0]) {
-                    videoEl.srcObject = event.streams[0];
+                    if (videoEl.srcObject !== event.streams[0]) {
+                        videoEl.srcObject = event.streams[0];
+                    }
                 } else {
                     if (!videoEl.srcObject) videoEl.srcObject = new MediaStream();
                     videoEl.srcObject.addTrack(event.track);
                 }
+                
                 videoEl.muted = false;
                 videoEl.autoplay = true;
                 videoEl.classList.remove('hidden');
-                videoEl.play().catch(e => console.warn("Video play blocked:", e));
+                
+                // Safely handle the play promise to ignore AbortErrors
+                const playPromise = videoEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        if (e.name !== 'AbortError') {
+                            console.warn("Video play blocked:", e);
+                        }
+                    });
+                }
                 
                 if (placeholder) {
                     placeholder.classList.add('hidden');
