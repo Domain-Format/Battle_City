@@ -1346,7 +1346,7 @@ function openCalc(playerNum) {
 
     if (label) {
         label.className = `text-xs font-bold uppercase tracking-widest text-${pColor} drop-shadow-md`;
-        label.textContent = playerNum === 1 ? `Your Life Points (P1)` : `P${playerNum} Life Points`;
+        label.textContent = playerNum === 1 ? `Life Points` : `P${playerNum} Life Points`;
     }
     
     const input = document.getElementById('calc-input');
