@@ -22,7 +22,7 @@ scrollbar-color: #3f3f46 transparent;
 width: 6px;
 }
 .log-container::-webkit-scrollbar-thumb {
-background-color: #3f3f46;
+background-color: #000000;
 border-radius: 10px;
 }
 
