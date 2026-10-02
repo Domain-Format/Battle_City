@@ -1,4 +1,3 @@
-// --- Core State ---
 let totalPlayers = 4;
 let lp = { 1: 8000, 2: 8000, 3: 8000, 4: 8000, 5: 8000, 6: 8000 };
 const logEl = document.getElementById('duel-log');
@@ -12,7 +11,6 @@ let activeCalcPlayer = null;
 let dmCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 let dragState = { active: false, el: null, container: null, playerNum: null, startX: 0, startY: 0, initialLeft: 0, initialTop: 0, moved: false };
 
-// --- SESSION PERSISTENCE ---
 let myPlayerId;
 try {
     myPlayerId = localStorage.getItem('ygo_player_id');
@@ -24,7 +22,6 @@ try {
     myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
 }
 
-// --- WebRTC State ---
 const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -35,14 +32,13 @@ let peerConnections = {};
 let peerGridMap = {};     
 let iceCandidateQueues = {}; 
 
-// --- Socket.IO Connection & Live Matchmaking ---
 let socket = null;
 let currentRoomId = null;
 const SERVER_URL = 'https://battle-city-7f80.onrender.com';
 
 window.addEventListener('DOMContentLoaded', () => {
     
-    // Check if the URL contains a room invite link
+    // --- The flawless invite link logic ---
     const urlParams = new URLSearchParams(window.location.search);
     const inviteRoom = urlParams.get('room');
 
@@ -56,11 +52,30 @@ window.addEventListener('DOMContentLoaded', () => {
             header.classList.replace('text-cyan-400', 'text-emerald-400');
         }
         
-        // Hide standard host options for invited users
         const hostOptions = document.getElementById('host-options');
         if (hostOptions) hostOptions.classList.add('hidden');
+
+        const lobbyFilters = document.getElementById('lobby-filters');
+        if (lobbyFilters) lobbyFilters.classList.add('hidden');
+
+        const roomNameContainer = document.getElementById('room-name-container');
+        if (roomNameContainer) roomNameContainer.classList.add('hidden');
         
-        // Change launch button to connect directly to the room
+        const nameConfigGrid = document.getElementById('name-config-grid');
+        if (nameConfigGrid) {
+            nameConfigGrid.classList.remove('md:grid-cols-2');
+            nameConfigGrid.classList.add('grid-cols-1');
+        }
+
+        const leftHeader = document.querySelector('.md\\:w-7\\/12 h2');
+        if (leftHeader) {
+            leftHeader.innerHTML = `
+                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"></path></svg>
+                ROOM INVITATION
+            `;
+            leftHeader.classList.replace('text-cyan-400', 'text-emerald-400');
+        }
+        
         const launchBtn = document.getElementById('launch-btn');
         if (launchBtn) {
             launchBtn.textContent = 'JOIN DUEL';
@@ -118,7 +133,6 @@ window.addEventListener('DOMContentLoaded', () => {
             totalPlayers = room.maxPlayers;
             peerGridMap = {}; 
 
-            // FORCE URL UPDATE WITH ROOM ID FOR INSTANT INVITES
             window.history.pushState({}, '', '?room=' + room.id);
             const copyLinkBtn = document.getElementById('copy-link-btn');
             if (copyLinkBtn) copyLinkBtn.classList.remove('hidden');
@@ -304,47 +318,22 @@ window.addEventListener('DOMContentLoaded', () => {
                 peerConnections[data.socketId].close();
                 delete peerConnections[data.socketId];
             }
-            const videoEl = document.getElementById(`p${data.seat}-video`);
-            if (videoEl) videoEl.srcObject = null;
-            const placeholder = document.getElementById(`p${data.seat}-placeholder`);
-            if (placeholder) {
-        if (inviteRoom) {
-            const header = document.getElementById('right-panel-header');
-            if (header) {
-                header.innerHTML = `
-                    <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                    JOIN INVITE
-                `;
-                header.classList.replace('text-cyan-400', 'text-emerald-400');
+            freeGridSlot(data.socketId, data.seat);
+        });
+
+        socket.on('player-left', (data) => {
+            if (peerConnections[data.socketId]) {
+                peerConnections[data.socketId].close();
+                delete peerConnections[data.socketId];
             }
+            freeGridSlot(data.socketId, data.seat);
+        });
+
+        socket.on('error', (msg) => {
+            console.error(`Server Error: ${msg}`);
+            addLog('System', `Server Error: ${msg}`, 'text-red-500 font-bold');
             
-            // Hide standard host options for invited users
-            const hostOptions = document.getElementById('host-options');
-            if (hostOptions) hostOptions.classList.add('hidden');
-
-            // Hide Lobby Filters
-            const lobbyFilters = document.getElementById('lobby-filters');
-            if (lobbyFilters) lobbyFilters.classList.add('hidden');
-
-            // Hide Room Name input and make Guest Name stretch full width
-        const roomNameContainer = document.getElementById('room-name-container');
-        if (roomNameContainer) roomNameContainer.classList.add('hidden');
-        
-        const nameConfigGrid = document.getElementById('name-config-grid');
-        if (nameConfigGrid) nameConfigGrid.classList.remove('md:grid-cols-2');
-
-        // Change the Left Panel Header from "Public Lobby" to "Room Invitation"
-        const leftHeader = document.querySelector('.md\\:w-7\\/12 h2');
-        if (leftHeader) {
-            leftHeader.innerHTML = `
-                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"></path></svg>
-                ROOM INVITATION
-            `;
-            leftHeader.classList.replace('text-cyan-400', 'text-emerald-400');
-        }
-        
-        // Change launch button to connect directly to the room
-        const launchBtn = document.getElementById('launch-btn');
+            const launchBtn = document.getElementById('launch-btn');
             if (launchBtn) {
                 launchBtn.disabled = false;
                 if (launchBtn.innerText.includes('Connecting')) {
@@ -357,9 +346,26 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Sync visual layout triggers
         socket.on('sync-layout', (layoutPositions) => { playerGridPositions = layoutPositions; randomizeSeats(false); });
         socket.on('update-lp', (data) => { lp[data.seat] = data.lp; updateLPDisplay(data.seat); });
+        socket.on('update-dm-count', (data) => {
+            dmCounts[data.seat] = data.dmCount;
+            const counterEl = document.getElementById(`p${data.seat}-dm-counter`);
+            if (counterEl) {
+                counterEl.textContent = data.dmCount;
+                counterEl.classList.add('scale-125', 'bg-amber-300');
+                setTimeout(() => counterEl.classList.remove('scale-125', 'bg-amber-300'), 150);
+            }
+        });
+        socket.on('set-dm-card', (data) => {
+            const imgEl = document.getElementById(`p${data.seat}-dm-img`);
+            const containerEl = document.getElementById(`p${data.seat}-dm-container`);
+            if (imgEl && containerEl) {
+                imgEl.src = `https://images.ygoprodeck.com/images/cards_cropped/${data.card.id}.jpg`;
+                containerEl.classList.remove('hidden');
+                addLog(`P${data.seat}`, `set a Deck Master!`, 'text-amber-200');
+            }
+        });
         socket.on('eliminate-player', (data) => { eliminatePlayerId(data.seat); });
         socket.on('dice-roll', (data) => { showEffect(data.seat, 'dice', data.result); addLog(`P${data.seat}`, `rolled a 6-sided die: <span class="font-bold text-indigo-400 text-lg ml-1">${data.result}</span>`, 'text-indigo-200'); });
         socket.on('coin-flip', (data) => { showEffect(data.seat, 'coin', data.result === 'HEADS' ? 'H' : 'T'); const color = data.result === 'HEADS' ? 'text-amber-400' : 'text-zinc-400'; addLog(`P${data.seat}`, `flipped a coin: <span class="font-bold ${color} text-lg ml-1">${data.result}</span>`, 'text-amber-100'); });
@@ -392,7 +398,6 @@ function createPeerConnection(targetId) {
             const videoEl = document.getElementById(`p${slot}-video`);
             const placeholder = document.getElementById(`p${slot}-placeholder`);
             if (videoEl) {
-                // Prevent AbortError by only assigning the stream if it's genuinely new
                 if (event.streams && event.streams[0]) {
                     if (videoEl.srcObject !== event.streams[0]) {
                         videoEl.srcObject = event.streams[0];
@@ -406,7 +411,6 @@ function createPeerConnection(targetId) {
                 videoEl.autoplay = true;
                 videoEl.classList.remove('hidden');
                 
-                // Safely handle the play promise to ignore AbortErrors
                 const playPromise = videoEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
@@ -446,22 +450,20 @@ function freeGridSlot(socketId, seat) {
         if (nameEl) nameEl.textContent = `P${slot}`;
         
         delete peerGridMap[socketId];
-        addLog('System', `P${slot} left the room permanently.`, 'text-red-400');
+        addLog('System', `P${slot} left the room.`, 'text-red-400');
     }
 }
 
-// --- SECURE COPY LINK FUNCTION ---
 function copyInviteLink() {
-    const url = window.location.href; // Captures the exact URL containing ?room=
+    const url = window.location.href; 
     
-    // Create a temporary hidden text field to bypass iFrame copy restrictions
     const tempInput = document.createElement('input');
     tempInput.value = url;
     document.body.appendChild(tempInput);
     tempInput.select();
     
     try {
-        document.execCommand('copy'); // Fallback command that works in all browsers/iframes
+        document.execCommand('copy'); 
         addLog('System', 'Invite link copied to clipboard!', 'text-emerald-400 font-bold');
         
         const btn = document.getElementById('copy-link-btn');
@@ -488,13 +490,12 @@ function updateLobbyUI(rooms) {
     
     lobbyList.innerHTML = '';
     
-    const urlParams = newSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     const inviteRoom = urlParams.get('room');
 
     if (inviteRoom) {
         const targetRoom = rooms.find(r => r.id === inviteRoom);
         if (targetRoom) {
-            // Display a large, centered Invitation Card for the specific room
             lobbyList.innerHTML = `
                 <div class="flex flex-col items-center justify-center p-8 mt-10 border border-emerald-900/50 bg-emerald-950/20 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                     <div class="flex items-center gap-2 mb-3">
@@ -509,7 +510,6 @@ function updateLobbyUI(rooms) {
                 </div>
             `;
         } else {
-            // If the room is private (hidden from the server list), show a cool Invite Card!
             lobbyList.innerHTML = `
                 <div class="flex flex-col items-center justify-center p-8 mt-10 border border-emerald-900/50 bg-emerald-950/20 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                     <svg class="w-12 h-12 text-emerald-500 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
@@ -709,7 +709,6 @@ async function joinServerRoom(roomId, isSpectator, btn) {
             modal.classList.remove('flex');
         }
         
-        // CRITICAL FIX: We must turn on the webcam BEFORE joining the room.
         if (!isSpectator) {
             await initWebcam();
         }
@@ -751,7 +750,6 @@ function leaveRoom() {
     logEl.innerHTML = '<div class="text-zinc-500 italic">Waiting for room configuration...</div>';
     clearCalc();
     
-    // Clear URL parameter so it doesn't instantly join again if refreshed
     window.history.pushState({}, '', window.location.pathname);
     
     const copyBtn = document.getElementById('copy-link-btn');
@@ -835,7 +833,6 @@ function toggleFlip(playerNum) {
         if (placeholder) placeholder.style.transform = transformValue;
     }
 
-    // Refresh seat inner-corner logic to ensure flipped cams lock to center properly
     randomizeSeats(false); 
 }
 
@@ -889,12 +886,10 @@ function randomizeSeats(shuffle = true) {
         let yPos = isTopRow ? 'bottom' : 'top';
         if (cols === 1) xPos = 'center';
 
-        // Player 1 is mirrored horizontally (scaleX(-1)), so we have to inverse X logic
         if (playerNum === 1 && cols !== 1) {
             xPos = (xPos === 'right') ? 'left' : (xPos === 'left' ? 'right' : 'center');
         }
 
-        // If a player flipped their overhead cam vertically, invert the Y logic
         if (isFlipped[playerNum]) {
             yPos = (yPos === 'top') ? 'bottom' : 'top';
         }
@@ -928,7 +923,7 @@ function startDuelTimer() {
         if(wrapper) {
             const innerBox = wrapper.firstElementChild;
             
-            innerBox.classList.add('bg-zinc-900/85', 'hover:bg-zinc-800', 'border-zinc-700/50');
+            innerBox.classList.add('bg-zinc-900/35', 'hover:bg-zinc-800', 'border-zinc-700/50');
             innerBox.classList.remove('bg-red-950/90', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
             
             const lpText = document.getElementById(`p${i}-lp`);
@@ -1081,7 +1076,7 @@ function eliminatePlayerId(playerNum) {
     const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
     if(wrapper) {
         const innerBox = wrapper.firstElementChild;
-        innerBox.classList.remove('bg-zinc-900/85', 'hover:bg-zinc-800', 'border-zinc-700/50', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+        innerBox.classList.remove('bg-zinc-900/35', 'hover:bg-zinc-800', 'border-zinc-700/50', 'ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
         innerBox.classList.add('bg-red-950/90', 'border-red-600', 'shadow-[0_0_15px_rgba(220,38,38,0.5)]');
     }
     
