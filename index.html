@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BATTLE CITY!</title>
+    <!-- External Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -26,6 +28,7 @@
                     </button>
                 </div>
                 
+                <!-- Format Filter -->
                 <div class="px-4 py-3 border-b border-zinc-800 bg-zinc-950 flex flex-wrap gap-2 shrink-0" id="lobby-filters">
                     <button onclick="filterLobby('All')" class="filter-btn active shrink-0 px-3 py-1 rounded border border-zinc-700 bg-zinc-800 text-zinc-300 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 transition">All Formats</button>
                     <button onclick="filterLobby('Advanced')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Advanced</button>
@@ -35,6 +38,7 @@
                     <button onclick="filterLobby('Custom')" class="filter-btn shrink-0 px-3 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-wider hover:border-cyan-500 hover:text-zinc-300 transition">Custom</button>
                 </div>
                 
+                <!-- Room List -->
                 <div class="flex-1 overflow-y-auto log-container p-4 flex flex-col gap-3" id="lobby-room-list">
                     <div class="text-zinc-500 italic text-center p-4 mt-10">
                         <svg class="animate-spin h-8 w-8 text-cyan-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -58,6 +62,7 @@
                 </div>
                 
                 <div class="p-6 flex flex-col gap-6 overflow-y-auto log-container">
+                    <!-- Authentication -->
                     <div class="flex flex-col gap-3">
                         <button id="yugipass-login-btn" onclick="simulateYugiPassLogin()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-100 font-bold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-3 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -83,16 +88,20 @@
                             <hr class="flex-1 border-zinc-800">
                         </div>
 
-                        <div>
-                            <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Room Name</label>
-                            <input type="text" id="setup-room-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="Room Name">
-                        </div>
-                        <div>
-                            <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Duelist Name</label>
-                            <input type="text" id="setup-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="e.g. Seto Kaiba" value="Player">
+                        <!-- Room Name and Guest Name Config -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Room Name</label>
+                                <input type="text" id="setup-room-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="Room Name" value="">
+                            </div>
+                            <div>
+                                <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Guest Duelist Name</label>
+                                <input type="text" id="setup-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="e.g. Seto Kaiba" value="Player 1">
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Format & Players -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Format</label>
@@ -116,6 +125,7 @@
                         </div>
                     </div>
 
+                    <!-- Toggles -->
                     <div class="flex flex-col gap-4 bg-zinc-950/50 p-4 rounded-lg border border-zinc-800 shadow-inner">
                         <label class="flex items-center gap-3 cursor-pointer group">
                             <input type="checkbox" id="setup-private" class="w-5 h-5 text-cyan-500 bg-zinc-900 border-zinc-700 rounded focus:ring-cyan-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 transition">
@@ -138,7 +148,7 @@
     </div>
 
     <!-- MAIN GAME HEADER -->
-    <header class="bg-zinc-900 border-b border-zinc-800 p-3 flex justify-between items-center shadow-lg shrink-0 z-10 relative">
+    <header class="bg-zinc-900 border-b border-zinc-800 p-3 flex justify-between items-center shadow-lg shrink-0">
         <div class="flex items-center gap-3">
             <svg class="w-7 h-7 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/>
@@ -149,7 +159,7 @@
             <button id="leave-room-btn" onclick="leaveRoom()" class="bg-red-900/80 hover:bg-red-800 border border-red-500/50 text-red-100 p-1.5 rounded shadow-[0_0_10px_rgba(220,38,38,0.3)] transition text-sm flex items-center justify-center gap-1 uppercase tracking-widest font-bold" title="Leave Room">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             </button>
-            <button id="randomize-btn" onclick="randomizeSeats(true)" class="bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-500/50 text-indigo-100 p-1.5 rounded shadow-[0_0_10px_rgba(99,102,241,0.3)] transition" title="Randomize Player Seats">
+            <button id="randomize-btn" onclick="randomizeSeats()" class="bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-500/50 text-indigo-100 p-1.5 rounded shadow-[0_0_10px_rgba(99,102,241,0.3)] transition" title="Randomize Player Seats">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg>
             </button>
             <button id="start-duel-btn" onclick="startDuelTimer()" class="bg-cyan-700 hover:bg-cyan-600 border border-cyan-500 text-cyan-100 font-bold py-1.5 px-4 rounded shadow-[0_0_10px_rgba(6,182,212,0.5)] transition text-sm tracking-widest uppercase animate-pulse">DUEL!</button>
@@ -158,29 +168,34 @@
     </header>
 
     <main class="flex-1 flex flex-col lg:flex-row p-2 gap-2 overflow-hidden h-full min-h-0 relative">
-        <div id="video-grid" class="flex-1 grid grid-cols-2 grid-rows-2 gap-0 min-h-0 h-full p-0 bg-black z-0">
+        
+        <!-- Dynamic Video Grid -->
+        <div id="video-grid" class="flex-1 grid grid-cols-2 grid-rows-2 gap-0 min-h-0 h-full p-0 bg-black">
             
-            <!-- Player 1 -->
-            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0 hidden" id="grid-item-1">
+            <!-- Player 1 (Local) -->
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-1">
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p1-container">
+                    <!-- Aspect Ratio Sizer -->
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
                     <!-- Combined Floating Name & LP -->
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p1-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <!-- Deck Master Interactive Counter -->
                             <div id="p1-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 1)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p1-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                                <img id="p1-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
                                 <div id="p1-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center w-full min-w-[120px]">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
-                                        <h2 id="p1-name" class="font-display text-base text-zinc-300 m-0 leading-none">P1</h2>
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse"></span>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P1</h2>
                                     </div>
-                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-1" onclick="toggleMenu(1)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-1" onclick="toggleMenu(1)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-1" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
                                             <button onclick="toggleMic(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
@@ -201,57 +216,51 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-blue-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(96,165,250,0.8)] pointer-events-none" id="p1-lp">8000</div>
-                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p1-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <video id="p1-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
+                    <video id="local-video" class="absolute inset-0 w-full h-full object-contain transition-transform duration-300" style="transform: scaleX(-1);" autoplay playsinline muted></video>
                     
-                    <div id="p1-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
-                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                        <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P1...</span>
-                    </div>
-
-                    <div id="cam-error-1" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-30 pointer-events-none">
-                        <svg class="w-6 h-6 text-amber-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" /></svg>
-                        <span class="text-amber-400 font-mono text-xs" id="cam-error-text-1">Cam Blocked</span>
+                    <div id="cam-error-message" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-10 pointer-events-none">
+                        <svg class="w-6 h-6 text-red-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                        </svg>
+                        <span class="text-red-400 font-mono text-xs" id="cam-error-text">Cam Error</span>
                     </div>
                 </div>
             </div>
 
             <!-- Player 2 -->
-            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0 hidden" id="grid-item-2">
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-2">
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p2-container">
+                    
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
+                    <!-- Combined Floating Name & LP -->
                     <div class="absolute bottom-1 left-1 z-20 transition-all duration-300 ease-out" id="p2-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <!-- Deck Master Interactive Counter -->
                             <div id="p2-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 2)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p2-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                                <img id="p2-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
                                 <div id="p2-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center w-full min-w-[120px]">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
-                                    <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-                                        <h2 id="p2-name" class="font-display text-base text-zinc-300 m-0 leading-none">P2</h2>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P2</h2>
                                     </div>
-                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-2" onclick="toggleMenu(2)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-2" onclick="toggleMenu(2)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-2" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleMic(); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
-                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
-                                            </button>
-                                            <button onclick="toggleCam(); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
-                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
-                                            </button>
                                             <button onclick="toggleFlip(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
                                             </button>
@@ -262,7 +271,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-red-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] pointer-events-none" id="p2-lp">8000</div>
-                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p2-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -272,47 +281,40 @@
                     <video id="p2-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
                     
                     <div id="p2-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
-                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
                         <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P2...</span>
-                    </div>
-
-                    <div id="cam-error-2" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-30 pointer-events-none">
-                        <svg class="w-6 h-6 text-amber-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" /></svg>
-                        <span class="text-amber-400 font-mono text-xs" id="cam-error-text-2">Cam Blocked</span>
                     </div>
                 </div>
             </div>
 
             <!-- Player 3 -->
-            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0 hidden" id="grid-item-3">
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-3">
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p3-container">
+                    
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
+                    <!-- Combined Floating Name & LP -->
                     <div class="absolute top-1 right-1 z-20 transition-all duration-300 ease-out" id="p3-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <!-- Deck Master Interactive Counter -->
                             <div id="p3-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 3)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p3-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                                <img id="p3-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
                                 <div id="p3-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center w-full min-w-[120px]">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
-                                    <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]"></span>
-                                        <h2 id="p3-name" class="font-display text-base text-zinc-300 m-0 leading-none">P3</h2>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P3</h2>
                                     </div>
-                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-3" onclick="toggleMenu(3)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-3" onclick="toggleMenu(3)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-3" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleMic(); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
-                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
-                                            </button>
-                                            <button onclick="toggleCam(); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
-                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
-                                            </button>
                                             <button onclick="toggleFlip(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
                                             </button>
@@ -323,7 +325,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-yellow-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] pointer-events-none" id="p3-lp">8000</div>
-                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p3-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -333,47 +335,40 @@
                     <video id="p3-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
                     
                     <div id="p3-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
-                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
                         <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P3...</span>
-                    </div>
-
-                    <div id="cam-error-3" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-30 pointer-events-none">
-                        <svg class="w-6 h-6 text-amber-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" /></svg>
-                        <span class="text-amber-400 font-mono text-xs" id="cam-error-text-3">Cam Blocked</span>
                     </div>
                 </div>
             </div>
 
             <!-- Player 4 -->
-            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0 hidden" id="grid-item-4">
+            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-4">
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p4-container">
+                    
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
 
+                    <!-- Combined Floating Name & LP -->
                     <div class="absolute top-1 left-1 z-20 transition-all duration-300 ease-out" id="p4-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <!-- Deck Master Interactive Counter -->
                             <div id="p4-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 4)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p4-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                                <img id="p4-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
                                 <div id="p4-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center w-full min-w-[120px]">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
-                                    <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10">
+                                    <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]"></span>
-                                        <h2 id="p4-name" class="font-display text-base text-zinc-300 m-0 leading-none">P4</h2>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P4</h2>
                                     </div>
-                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-4" onclick="toggleMenu(4)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <!-- Camera Controls -->
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-4" onclick="toggleMenu(4)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-4" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleMic(); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
-                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
-                                            </button>
-                                            <button onclick="toggleCam(); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
-                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
-                                            </button>
                                             <button onclick="toggleFlip(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
                                             </button>
@@ -384,7 +379,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-purple-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(192,132,252,0.8)] pointer-events-none" id="p4-lp">8000</div>
-                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p4-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -394,47 +389,36 @@
                     <video id="p4-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
                     
                     <div id="p4-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
-                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
                         <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P4...</span>
-                    </div>
-
-                    <div id="cam-error-4" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-30 pointer-events-none">
-                        <svg class="w-6 h-6 text-amber-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" /></svg>
-                        <span class="text-amber-400 font-mono text-xs" id="cam-error-text-4">Cam Blocked</span>
                     </div>
                 </div>
             </div>
 
             <!-- Player 5 -->
-            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0 hidden" id="grid-item-5">
+            <div class="hidden flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-5">
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p5-container">
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
-
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p5-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <!-- Deck Master Interactive Counter -->
                             <div id="p5-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 5)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p5-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                                <img id="p5-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
                                 <div id="p5-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center w-full min-w-[120px]">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
-                                    <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 pointer-events-auto">
+                                    <div class="flex items-center gap-1.5 pointer-events-none">
                                         <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span>
-                                        <h2 id="p5-name" class="font-display text-base text-zinc-300 m-0 leading-none">P5</h2>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P5</h2>
                                     </div>
-                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-5" onclick="toggleMenu(5)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-5" onclick="toggleMenu(5)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-5" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleMic(); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
-                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
-                                            </button>
-                                            <button onclick="toggleCam(); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
-                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
-                                            </button>
                                             <button onclick="toggleFlip(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
                                             </button>
@@ -445,7 +429,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-orange-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(249,115,22,0.8)] pointer-events-none" id="p5-lp">8000</div>
-                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p5-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -453,46 +437,36 @@
                     </div>
                     <video id="p5-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
                     <div id="p5-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
-                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
                         <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P5...</span>
-                    </div>
-                    <div id="cam-error-5" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-30 pointer-events-none">
-                        <svg class="w-6 h-6 text-amber-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" /></svg>
-                        <span class="text-amber-400 font-mono text-xs" id="cam-error-text-5">Cam Blocked</span>
                     </div>
                 </div>
             </div>
 
             <!-- Player 6 -->
-            <div class="flex items-center justify-center w-full h-full min-h-0 min-w-0 hidden" id="grid-item-6">
+            <div class="hidden flex items-center justify-center w-full h-full min-h-0 min-w-0" id="grid-item-6">
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p6-container">
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
-
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p6-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/[0.35] hover:bg-zinc-900/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                            <!-- Deck Master Interactive Counter -->
                             <div id="p6-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 6)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p6-dm-img" src="" class="h-[92px] w-[92px] rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950 shrink-0">
+                                <img id="p6-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
                                 <div id="p6-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
-                            <div class="flex flex-col justify-center w-full min-w-[120px]">
-                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 w-full">
-                                    <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-4 mb-0.5 relative z-10 pointer-events-auto">
+                                    <div class="flex items-center gap-1.5 pointer-events-none">
                                         <span class="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
-                                        <h2 id="p6-name" class="font-display text-base text-zinc-300 m-0 leading-none">P6</h2>
+                                        <h2 class="font-display text-base text-zinc-300 m-0 leading-none">P6</h2>
                                     </div>
-                                    <div class="relative flex items-center shrink-0" onpointerdown="event.stopPropagation()">
-                                        <button id="cam-btn-6" onclick="toggleMenu(6)" class="hidden flex items-center justify-center shrink-0 text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded min-w-[32px] min-h-[32px]" title="Options">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                    <div class="relative flex items-center" onpointerdown="event.stopPropagation()">
+                                        <button id="cam-btn-6" onclick="toggleMenu(6)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
                                         <div id="cam-menu-6" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleMic(); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
-                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
-                                            </button>
-                                            <button onclick="toggleCam(); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
-                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
-                                            </button>
                                             <button onclick="toggleFlip(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
                                             </button>
@@ -503,7 +477,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-pink-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(236,72,153,0.8)] pointer-events-none" id="p6-lp">8000</div>
-                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p6-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -511,12 +485,10 @@
                     </div>
                     <video id="p6-video" class="absolute inset-0 w-full h-full object-contain hidden transition-transform duration-300" playsinline></video>
                     <div id="p6-placeholder" class="absolute inset-0 text-center text-zinc-600 flex flex-col items-center justify-center gap-1 transition-transform duration-300 z-10 pointer-events-none">
-                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
                         <span class="font-mono text-[10px] uppercase tracking-widest">Awaiting P6...</span>
-                    </div>
-                    <div id="cam-error-6" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-30 pointer-events-none">
-                        <svg class="w-6 h-6 text-amber-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" /></svg>
-                        <span class="text-amber-400 font-mono text-xs" id="cam-error-text-6">Cam Blocked</span>
                     </div>
                 </div>
             </div>
@@ -524,8 +496,9 @@
         </div>
 
         <!-- Sidebar / Utilities -->
-        <div class="lg:w-80 flex flex-col gap-2 min-h-0 shrink-0 z-10 relative">
+        <div class="lg:w-80 flex flex-col gap-2 min-h-0 shrink-0">
             
+            <!-- Card Preview & Search -->
             <div class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 shadow-lg flex-1 flex flex-col gap-2 relative min-h-0">
                 <div class="relative z-30 shrink-0">
                     <input type="text" id="card-search" oninput="searchCard(this.value)" onkeydown="handleSearchKey(event)" placeholder="Search card database..." class="w-full bg-zinc-950 text-white text-sm p-2 rounded border border-zinc-700 focus:outline-none focus:border-cyan-500 placeholder-zinc-600 transition">
@@ -546,12 +519,16 @@
                 </div>
             </div>
 
+            <!-- Recent Searches -->
             <div id="card-history-panel" class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 shadow-lg shrink-0 flex flex-col gap-1 max-h-40">
                 <div class="text-[10px] text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-1 font-semibold shrink-0">Recent Searches</div>
                 <div id="empty-history" class="text-[10px] text-zinc-600 italic px-1 py-1">No history yet.</div>
-                <ul id="card-history-list" class="flex flex-col overflow-y-auto log-container pb-1 pt-1 text-zinc-400 gap-1 hidden"></ul>
+                <ul id="card-history-list" class="flex flex-col overflow-y-auto log-container pb-1 pt-1 text-zinc-400 gap-1 hidden">
+                    <!-- History items will go here -->
+                </ul>
             </div>
 
+            <!-- LP Calculator (Sidebar) -->
             <div id="lp-calculator" class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-lg shrink-0 flex flex-col gap-2 transition-all duration-300">
                 <div class="flex justify-between items-center border-b border-zinc-800 pb-2 mb-1">
                     <span id="calc-target-label" class="text-xs font-bold uppercase tracking-widest text-cyan-400">Your Life Points</span>
@@ -567,6 +544,7 @@
                 </div>
             </div>
 
+            <!-- Utilities -->
             <div class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 shadow-lg flex gap-2 shrink-0">
                 <button onclick="rollDice()" class="flex-1 bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/50 text-indigo-300 py-2 rounded-lg flex flex-col items-center gap-1 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -587,6 +565,7 @@
                 </button>
             </div>
 
+            <!-- Activity Log -->
             <div id="log-panel" class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-lg flex flex-col shrink-0 transition-all duration-300">
                 <div class="flex justify-between items-center border-b border-zinc-800 pb-1 shrink-0 cursor-pointer group" onclick="toggleLog()">
                     <div class="flex items-center gap-2">
@@ -599,6 +578,7 @@
                     <div class="text-zinc-500 italic">Duel started. Waiting for actions...</div>
                 </div>
                 
+                <!-- Chat Input -->
                 <div id="chat-input-container" class="shrink-0 gap-2 hidden mt-1">
                     <input type="text" id="chat-input" onkeypress="handleChatKey(event)" placeholder="Type a message..." class="flex-1 bg-zinc-950 text-white text-xs p-2 rounded border border-zinc-700 focus:outline-none focus:border-cyan-500 placeholder-zinc-600 transition">
                     <button onclick="sendChat()" class="bg-cyan-900/80 hover:bg-cyan-800 text-cyan-100 p-2 rounded transition flex items-center justify-center border border-cyan-700/50" title="Send Message">
@@ -610,7 +590,7 @@
         </div>
     </main>
 
-    <!-- DM Modal -->
+    <!-- Deck Master Search Modal -->
     <div id="dm-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
         <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-[80vh] overflow-hidden">
             <div class="p-3 border-b border-zinc-800 flex justify-between items-center">
@@ -627,6 +607,8 @@
             </div>
         </div>
     </div>
-  <script src="script.js"></script>
+
+    <!-- External Script -->
+    <script src="script.js"></script>
 </body>
 </html>
