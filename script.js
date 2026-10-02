@@ -1,4 +1,4 @@
-//// --- Core State ---
+// --- Core State ---
 let totalPlayers = 4;
 let lp = { 1: 8000, 2: 8000, 3: 8000, 4: 8000, 5: 8000, 6: 8000 };
 const logEl = document.getElementById('duel-log');
@@ -7,6 +7,7 @@ let localStream = null;
 let isMicOn = true;
 let isCamOn = true;
 let isFlipped = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false }; 
+
 let activeCalcPlayer = null;
 let dmCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 let dragState = { active: false, el: null, container: null, playerNum: null, startX: 0, startY: 0, initialLeft: 0, initialTop: 0, moved: false };
@@ -23,7 +24,7 @@ try {
     myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
 }
 
-//// --- WebRTC State ---
+// --- WebRTC State ---
 const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -106,7 +107,7 @@ window.addEventListener('DOMContentLoaded', () => {
             addLog('System', `Room registered on server! ID: <span class="text-cyan-300 font-mono">${roomId}</span>`, 'text-emerald-400 font-bold');
         });
 
-        //        socket.on('room-joined', async (room, mySeat) => {
+        socket.on('room-joined', async (room, mySeat) => {
             currentRoomId = room.id;
             totalPlayers = room.maxPlayers;
             peerGridMap = {}; 
@@ -201,7 +202,7 @@ window.addEventListener('DOMContentLoaded', () => {
             addLog('System', `Joined room: ${room.roomName} as P${mySeat || 'Spectator'}`, 'text-emerald-400 font-bold');
         });
 
-        //        socket.on('player-joined', async (data) => {
+        socket.on('player-joined', async (data) => {
             peerGridMap[data.newPlayerId] = data.seat;
             const nameEl = document.getElementById(`p${data.seat}-name`);
             if (nameEl) nameEl.textContent = data.name;
@@ -287,7 +288,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        //        socket.on('player-dropped', (data) => {
+        socket.on('player-dropped', (data) => {
             if (peerConnections[data.socketId]) {
                 peerConnections[data.socketId].close();
                 delete peerConnections[data.socketId];
@@ -315,7 +316,6 @@ window.addEventListener('DOMContentLoaded', () => {
         socket.on('error', (msg) => {
             addLog('System', `Server Error: ${msg}`, 'text-red-500 font-bold');
             if(msg.includes('not found')) {
-                // Remove invalid room ID from URL
                 window.history.pushState({}, '', window.location.pathname);
             }
         });
@@ -333,7 +333,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-//function createPeerConnection(targetId) {
+function createPeerConnection(targetId) {
     if (peerConnections[targetId]) return peerConnections[targetId];
 
     const pc = new RTCPeerConnection(rtcConfig);
@@ -400,7 +400,7 @@ function freeGridSlot(socketId, seat) {
     }
 }
 
-//function copyInviteLink() {
+function copyInviteLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
         addLog('System', 'Invite link copied to clipboard!', 'text-emerald-400 font-bold');
@@ -524,7 +524,7 @@ function logoutYugiPass() {
     document.getElementById('yugipass-user-profile').classList.add('hidden');
 }
 
-//async function launchRoom(btn) {
+async function launchRoom(btn) {
     if (btn) {
         btn.disabled = true;
         btn.innerText = 'Initializing...';
@@ -640,11 +640,9 @@ function leaveRoom() {
     logEl.innerHTML = '<div class="text-zinc-500 italic">Waiting for room configuration...</div>';
     clearCalc();
     
-    // Remove the room from the URL silently
     window.history.pushState({}, '', window.location.pathname);
     document.getElementById('copy-link-btn').classList.add('hidden');
 
-    // Reset setup modal UI incase they had join invite UI showing
     document.getElementById('right-panel-header').innerHTML = `
         <svg class="w-10 h-10 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/></svg>
         HOST ROOM
@@ -665,7 +663,7 @@ function leaveRoom() {
     isMicOn = false;
 }
 
-//function toggleMenu(playerNum) {
+function toggleMenu(playerNum) {
     if (playerNum !== 1) return;
 
     const menu = document.getElementById(`cam-menu-${playerNum}`);
@@ -703,7 +701,7 @@ function toggleFlip(playerNum) {
     const transformValue = isFlipped[playerNum] ? 'scaleY(-1)' : 'scaleY(1)';
     
     if (playerNum === 1) {
-        const videoEl = document.getElementById('p1-video');
+        const videoEl = document.getElementById('local-video');
         if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleX(-1) scaleY(-1)' : 'scaleX(-1)';
     } else {
         const videoEl = document.getElementById(`p${playerNum}-video`);
@@ -713,7 +711,7 @@ function toggleFlip(playerNum) {
         if (placeholder) placeholder.style.transform = transformValue;
     }
 
-    randomizeSeats(false); // Snap back to correct object-position relative to flip
+    randomizeSeats(false); 
 }
 
 let timerInterval = null;
@@ -766,17 +764,15 @@ function randomizeSeats(shuffle = true) {
         let yPos = isTopRow ? 'bottom' : 'top';
         if (cols === 1) xPos = 'center';
 
-        // Fix logic for P1 specifically because P1 has scaleX(-1) mirror effect natively
         if (playerNum === 1 && cols !== 1) {
             xPos = (xPos === 'right') ? 'left' : (xPos === 'left' ? 'right' : 'center');
         }
 
-        // If flipped, reverse the vertical snapping point
         if (isFlipped[playerNum]) {
             yPos = (yPos === 'top') ? 'bottom' : 'top';
         }
         
-        const videoEl = document.getElementById(`p${playerNum}-video`);
+        const videoEl = document.getElementById(playerNum === 1 ? 'local-video' : `p${playerNum}-video`);
         if (videoEl) {
             videoEl.style.objectPosition = `${xPos} ${yPos}`;
             videoEl.style.transition = 'object-position 0.5s ease-out, transform 0.3s';
@@ -792,7 +788,7 @@ function randomizeSeats(shuffle = true) {
     if (shuffle) addLog('System', 'Room seating has been randomized!', 'text-indigo-400 italic font-bold');
 }
 
-//function startDuelTimer() {
+function startDuelTimer() {
     if (duelActive || isRouletteSpinning) return;
     isRouletteSpinning = true;
     
@@ -972,19 +968,18 @@ function eliminateActivePlayer() {
     clearCalc();
 }
 
-//let hasInitializedCam = false;
+let hasInitializedCam = false;
 
 async function initWebcam() {
     if (hasInitializedCam) return;
     hasInitializedCam = true;
 
-    const videoEl = document.getElementById('p1-video');
+    const videoEl = document.getElementById('local-video');
     const errorOverlay = document.getElementById('cam-error-message');
     const errorText = document.getElementById('cam-error-text');
 
     localStream = new MediaStream();
 
-    // 1. Try Video First
     try {
         const vidStream = await navigator.mediaDevices.getUserMedia({ 
             video: { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 } } 
@@ -1004,7 +999,6 @@ async function initWebcam() {
         addLog('System', `Media notice: Camera unavailable.`, 'text-amber-500');
     }
 
-    // 2. Try Audio Independently
     try {
         const audStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         audStream.getAudioTracks().forEach(track => localStream.addTrack(track));
@@ -1019,7 +1013,6 @@ async function initWebcam() {
         addLog('System', `Media notice: Mic unavailable.`, 'text-amber-500');
     }
 
-    // Attach whatever streams succeeded
     if (localStream.getTracks().length > 0) {
         videoEl.srcObject = localStream;
     }
@@ -1062,7 +1055,7 @@ async function toggleMic() {
 }
 
 async function toggleCam() {
-    const videoEl = document.getElementById('p1-video');
+    const videoEl = document.getElementById('local-video');
     const errorOverlay = document.getElementById('cam-error-message');
     
     if (isCamOn) {
@@ -1110,7 +1103,7 @@ async function toggleCam() {
     }
 }
 
-//function addLog(actor, message, colorClass = 'text-zinc-300') {
+function addLog(actor, message, colorClass = 'text-zinc-300') {
     const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
     const entry = document.createElement('div');
     entry.className = `p-2 rounded bg-zinc-950/50 border border-zinc-800/50 ${colorClass}`;
@@ -1314,7 +1307,7 @@ function setLP(player, amount) {
     if (lp[player] === 0) eliminatePlayerId(player);
 }
 
-//function showEffect(playerNum, type, result) {
+function showEffect(playerNum, type, result) {
     const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
     if (!wrapper) return;
 
@@ -1408,7 +1401,7 @@ function flipCoin() {
     if (socket && currentRoomId) socket.emit('coin-flip', currentRoomId, { seat: p, result: result });
 }
 
-//let searchTimeout;
+let searchTimeout;
 let cardHistory = [];
 let searchSelectedIndex = -1;
 
@@ -1586,7 +1579,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-//function startDrag(e, playerNum) {
+function startDrag(e, playerNum) {
     if (playerNum !== 1) return;
 
     dragState.active = true;
@@ -1689,7 +1682,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-//let targetDMPlayer = null;
+let targetDMPlayer = null;
 let dmSearchTimeout;
 let dmSelectedIndex = -1;
 
