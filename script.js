@@ -326,7 +326,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
         socket.on('error', (msg) => {
             addLog('System', `Server Error: ${msg}`, 'text-red-500 font-bold');
-            if(msg.includes('not found')) {
+            
+            // Un-hide the setup modal so the user isn't stuck on a black screen!
+            const modal = document.getElementById('setup-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            const launchBtn = document.getElementById('launch-btn');
+            if (launchBtn) {
+                launchBtn.disabled = false;
+                if (launchBtn.innerText.includes('Connecting')) {
+                    launchBtn.innerText = 'Join Failed';
+                }
+            }
+
+            if(msg.includes('not found') || msg.includes('full')) {
                 window.history.pushState({}, '', window.location.pathname);
             }
         });
@@ -411,22 +427,36 @@ function freeGridSlot(socketId, seat) {
     }
 }
 
+// --- SECURE COPY LINK FUNCTION ---
 function copyInviteLink() {
-    const url = window.location.href; // Captures the exact URL (now containing ?room=...)
-    navigator.clipboard.writeText(url).then(() => {
+    const url = window.location.href; // Captures the exact URL containing ?room=
+    
+    // Create a temporary hidden text field to bypass iFrame copy restrictions
+    const tempInput = document.createElement('input');
+    tempInput.value = url;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    
+    try {
+        document.execCommand('copy'); // Fallback command that works in all browsers/iframes
         addLog('System', 'Invite link copied to clipboard!', 'text-emerald-400 font-bold');
+        
         const btn = document.getElementById('copy-link-btn');
-        if (!btn) return;
-        
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> COPIED!`;
-        btn.classList.replace('bg-emerald-900/80', 'bg-emerald-600');
-        
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.classList.replace('bg-emerald-600', 'bg-emerald-900/80');
-        }, 2000);
-    });
+        if (btn) {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> COPIED!`;
+            btn.classList.replace('bg-emerald-900/80', 'bg-emerald-600');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.replace('bg-emerald-600', 'bg-emerald-900/80');
+            }, 2000);
+        }
+    } catch (err) {
+        addLog('System', 'Failed to copy link. Please manually copy the URL.', 'text-red-400');
+    }
+    
+    document.body.removeChild(tempInput);
 }
 
 function updateLobbyUI(rooms) {
@@ -623,6 +653,13 @@ async function joinServerRoom(roomId, isSpectator, btn) {
             modal.classList.remove('flex');
         }
         
+        // CRITICAL FIX: We must turn on the webcam BEFORE joining the room.
+        // If you refresh and reconnect, existing players immediately send video requests.
+        // If the camera isn't ready yet, your video stays black for them!
+        if (!isSpectator) {
+            await initWebcam();
+        }
+
         socket.emit('join-room', roomId, isSpectator, guestName, myPlayerId);
         currentRoomId = roomId;
 
