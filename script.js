@@ -92,7 +92,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     for (let i = 2; i <= 6; i++) {
         const camBtn = document.getElementById(`cam-btn-${i}`);
-        if (camBtn) camBtn.classList.add('hidden');
+        if (camBtn) camBtn.classList.add('invisible');
         
         const lpWrapper = document.getElementById(`p${i}-lp-wrapper`);
         if (lpWrapper) {
@@ -834,6 +834,13 @@ function toggleFlip(playerNum) {
     }
 
     randomizeSeats(false); 
+}
+
+function changeBoxOpacity(playerNum, value) {
+    const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
+    if (wrapper) {
+        wrapper.style.opacity = value;
+    }
 }
 
 let timerInterval = null;
