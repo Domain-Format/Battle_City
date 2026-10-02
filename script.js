@@ -654,8 +654,6 @@ async function joinServerRoom(roomId, isSpectator, btn) {
         }
         
         // CRITICAL FIX: We must turn on the webcam BEFORE joining the room.
-        // If you refresh and reconnect, existing players immediately send video requests.
-        // If the camera isn't ready yet, your video stays black for them!
         if (!isSpectator) {
             await initWebcam();
         }
