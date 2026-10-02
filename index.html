@@ -95,7 +95,7 @@
                             </div>
                             <div id="guest-name-container">
                                 <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Guest Duelist Name</label>
-                                <input type="text" id="setup-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="e.g. John" value="Player 1">
+                                <input type="text" id="setup-name" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner" placeholder="e.g. Seto Kaiba" value="Player 1">
                             </div>
                         </div>
                     </div>
@@ -107,9 +107,9 @@
                                 <label class="block text-cyan-500 text-xs font-bold uppercase tracking-widest mb-2">Format</label>
                                 <select id="setup-format" class="w-full bg-zinc-950 text-white p-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition shadow-inner">
                                     <option value="Advanced">Advanced</option>
-                                    <option value="Time Wizard">Time Wizard</option>
-                                    <option value="Domain" selected>Domain</option>
                                     <option value="Genesys">Genesys</option>
+                                    <option value="Domain" selected>Domain</option>
+                                    <option value="Time Wizard">Time Wizard</option>
                                     <option value="Custom">Custom</option>
                                 </select>
                             </div>
@@ -202,21 +202,27 @@
                                         <button id="cam-btn-1" onclick="toggleMenu(1)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
-                                        <div id="cam-menu-1" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleMic(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
-                                                <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                                <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
-                                            </button>
-                                            <button onclick="toggleCam(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
-                                                <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
-                                            </button>
-                                            <button onclick="toggleFlip(1); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                                            </button>
-                                            <button onclick="openDMSearch(1); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
-                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
-                                            </button>
+                                        <div id="cam-menu-1" class="cam-menu-dropdown absolute hidden flex-col gap-2 bg-zinc-800 border border-zinc-700 p-2 rounded-lg shadow-xl z-50 w-max">
+                                            <div class="flex flex-row gap-1">
+                                                <button onclick="toggleMic(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Mic">
+                                                    <svg id="mic-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                                                    <svg id="mic-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M12 14a3 3 0 01-3-3V5m0 0a3 3 0 116 0v6m-6 0a3 3 0 003 3m-3 7v4m0 0H8m4 0h4m-4-8a7 7 0 01-7-7m14 0a7 7 0 01-.6 2.85"></path></svg>
+                                                </button>
+                                                <button onclick="toggleCam(); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Toggle Cam">
+                                                    <svg id="cam-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                                    <svg id="cam-icon-off" class="w-4 h-4 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18"></path></svg>
+                                                </button>
+                                                <button onclick="toggleFlip(1); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                                </button>
+                                                <button onclick="openDMSearch(1); toggleMenu(1)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2 pt-1 border-t border-zinc-700 mt-1">
+                                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <input type="range" min="0.2" max="1" step="0.05" value="1" oninput="changeBoxOpacity(1, this.value)" class="w-20 accent-cyan-500 cursor-pointer">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -265,13 +271,19 @@
                                         <button id="cam-btn-2" onclick="toggleMenu(2)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
-                                        <div id="cam-menu-2" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleFlip(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                                            </button>
-                                            <button onclick="openDMSearch(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
-                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
-                                            </button>
+                                        <div id="cam-menu-2" class="cam-menu-dropdown absolute hidden flex-col gap-2 bg-zinc-800 border border-zinc-700 p-2 rounded-lg shadow-xl z-50 w-max">
+                                            <div class="flex flex-row gap-1">
+                                                <button onclick="toggleFlip(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                                </button>
+                                                <button onclick="openDMSearch(2); toggleMenu(2)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2 pt-1 border-t border-zinc-700 mt-1">
+                                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <input type="range" min="0.2" max="1" step="0.05" value="1" oninput="changeBoxOpacity(2, this.value)" class="w-20 accent-cyan-500 cursor-pointer">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -319,13 +331,19 @@
                                         <button id="cam-btn-3" onclick="toggleMenu(3)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
-                                        <div id="cam-menu-3" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleFlip(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                                            </button>
-                                            <button onclick="openDMSearch(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
-                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
-                                            </button>
+                                        <div id="cam-menu-3" class="cam-menu-dropdown absolute hidden flex-col gap-2 bg-zinc-800 border border-zinc-700 p-2 rounded-lg shadow-xl z-50 w-max">
+                                            <div class="flex flex-row gap-1">
+                                                <button onclick="toggleFlip(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                                </button>
+                                                <button onclick="openDMSearch(3); toggleMenu(3)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2 pt-1 border-t border-zinc-700 mt-1">
+                                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <input type="range" min="0.2" max="1" step="0.05" value="1" oninput="changeBoxOpacity(3, this.value)" class="w-20 accent-cyan-500 cursor-pointer">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -373,13 +391,19 @@
                                         <button id="cam-btn-4" onclick="toggleMenu(4)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
-                                        <div id="cam-menu-4" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleFlip(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                                            </button>
-                                            <button onclick="openDMSearch(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
-                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
-                                            </button>
+                                        <div id="cam-menu-4" class="cam-menu-dropdown absolute hidden flex-col gap-2 bg-zinc-800 border border-zinc-700 p-2 rounded-lg shadow-xl z-50 w-max">
+                                            <div class="flex flex-row gap-1">
+                                                <button onclick="toggleFlip(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                                </button>
+                                                <button onclick="openDMSearch(4); toggleMenu(4)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2 pt-1 border-t border-zinc-700 mt-1">
+                                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <input type="range" min="0.2" max="1" step="0.05" value="1" oninput="changeBoxOpacity(4, this.value)" class="w-20 accent-cyan-500 cursor-pointer">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -423,13 +447,19 @@
                                         <button id="cam-btn-5" onclick="toggleMenu(5)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
-                                        <div id="cam-menu-5" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleFlip(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                                            </button>
-                                            <button onclick="openDMSearch(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
-                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
-                                            </button>
+                                        <div id="cam-menu-5" class="cam-menu-dropdown absolute hidden flex-col gap-2 bg-zinc-800 border border-zinc-700 p-2 rounded-lg shadow-xl z-50 w-max">
+                                            <div class="flex flex-row gap-1">
+                                                <button onclick="toggleFlip(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                                </button>
+                                                <button onclick="openDMSearch(5); toggleMenu(5)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2 pt-1 border-t border-zinc-700 mt-1">
+                                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <input type="range" min="0.2" max="1" step="0.05" value="1" oninput="changeBoxOpacity(5, this.value)" class="w-20 accent-cyan-500 cursor-pointer">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -471,13 +501,19 @@
                                         <button id="cam-btn-6" onclick="toggleMenu(6)" class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer p-2 -m-1.5 rounded" title="Options">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         </button>
-                                        <div id="cam-menu-6" class="cam-menu-dropdown absolute hidden flex-row gap-1 bg-zinc-800 border border-zinc-700 p-1.5 rounded-lg shadow-xl z-50 w-max">
-                                            <button onclick="toggleFlip(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                                            </button>
-                                            <button onclick="openDMSearch(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
-                                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
-                                            </button>
+                                        <div id="cam-menu-6" class="cam-menu-dropdown absolute hidden flex-col gap-2 bg-zinc-800 border border-zinc-700 p-2 rounded-lg shadow-xl z-50 w-max">
+                                            <div class="flex flex-row gap-1">
+                                                <button onclick="toggleFlip(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Flip Cam">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                                </button>
+                                                <button onclick="openDMSearch(6); toggleMenu(6)" class="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded transition" title="Set Deck Master">
+                                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6 6-6 6 6 3-6v14H3V6z"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2 pt-1 border-t border-zinc-700 mt-1">
+                                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <input type="range" min="0.2" max="1" step="0.05" value="1" oninput="changeBoxOpacity(6, this.value)" class="w-20 accent-cyan-500 cursor-pointer">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
