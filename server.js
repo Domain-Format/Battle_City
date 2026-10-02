@@ -28,6 +28,9 @@ io.on('connection', (socket) => {
         for(let i = 1; i <= roomConfig.maxPlayers; i++) availableSeats.push(i);
         const hostSeat = availableSeats.shift();
 
+        // Bind the player to their unique browser ID instead of a temporary connection ID
+        const playerId = roomConfig.playerId || socket.id;
+
         activeRooms[roomId] = {
             id: roomId,
             hostId: socket.id,
@@ -40,15 +43,18 @@ io.on('connection', (socket) => {
             isPrivate: roomConfig.isPrivate,
             allowSpectators: roomConfig.allowSpectators,
             peers: [socket.id],
+            sockets: { [socket.id]: playerId },
             players: { 
-                [socket.id]: { 
+                [playerId]: { 
+                    socketId: socket.id,
                     seat: hostSeat, 
                     name: roomConfig.hostName || "Host", 
                     isFlipped: false,
                     lp: 8000,
                     dmCount: 0,
                     dmCard: null,
-                    isEliminated: false
+                    isEliminated: false,
+                    isConnected: true
                 } 
             },
             availableSeats: availableSeats
@@ -61,7 +67,7 @@ io.on('connection', (socket) => {
     });
 
     // 2. Joining a Room
-    socket.on('join-room', (roomId, isSpectator, guestName) => {
+    socket.on('join-room', (roomId, isSpectator, guestName, guestPlayerId) => {
         const room = activeRooms[roomId];
         if (!room) return socket.emit('error', 'Room not found');
 
@@ -70,26 +76,56 @@ io.on('connection', (socket) => {
             socket.join(roomId);
             socket.to(roomId).emit('spectator-joined', socket.id);
             socket.emit('room-joined', room, null);
-        } else {
-            if (room.currentPlayers >= room.maxPlayers) return socket.emit('error', 'Room is full');
-            
-            const guestSeat = room.availableSeats.shift();
-            room.currentPlayers++;
-            room.peers.push(socket.id);
-            room.players[socket.id] = { 
-                seat: guestSeat, 
-                name: guestName || "Player", 
-                isFlipped: false,
-                lp: 8000,
-                dmCount: 0,
-                dmCard: null,
-                isEliminated: false
-            };
-            
-            socket.join(roomId);
-            socket.to(roomId).emit('player-joined', { newPlayerId: socket.id, seat: guestSeat, name: guestName });
-            socket.emit('room-joined', room, guestSeat);
+            return;
         }
+
+        const playerId = guestPlayerId || socket.id;
+
+        // RECONNECTION LOGIC: If they are already in the room, give them their seat back!
+        if (room.players[playerId]) {
+            const p = room.players[playerId];
+            const oldSocketId = p.socketId;
+
+            // Map the new connection to the old player profile
+            if (oldSocketId && room.sockets[oldSocketId]) {
+                delete room.sockets[oldSocketId];
+            }
+            room.sockets[socket.id] = playerId;
+            p.socketId = socket.id;
+            p.isConnected = true;
+
+            room.peers = room.peers.filter(id => id !== oldSocketId);
+            room.peers.push(socket.id);
+
+            socket.join(roomId);
+            socket.emit('room-joined', room, p.seat);
+            socket.to(roomId).emit('player-reconnected', { newSocketId: socket.id, seat: p.seat, name: p.name });
+            return;
+        }
+
+        if (room.currentPlayers >= room.maxPlayers) return socket.emit('error', 'Room is full');
+        
+        const guestSeat = room.availableSeats.shift();
+        room.currentPlayers++;
+        room.peers.push(socket.id);
+        room.sockets[socket.id] = playerId;
+
+        room.players[playerId] = { 
+            socketId: socket.id,
+            seat: guestSeat, 
+            name: guestName || "Player", 
+            isFlipped: false,
+            lp: 8000,
+            dmCount: 0,
+            dmCard: null,
+            isEliminated: false,
+            isConnected: true
+        };
+        
+        socket.join(roomId);
+        socket.to(roomId).emit('player-joined', { newPlayerId: socket.id, seat: guestSeat, name: guestName });
+        socket.emit('room-joined', room, guestSeat);
+        
         io.emit('lobby-update', getPublicRooms());
     });
 
@@ -134,45 +170,57 @@ io.on('connection', (socket) => {
     socket.on('coin-flip', (roomId, data) => socket.to(roomId).emit('coin-flip', data));
     socket.on('send-chat', (roomId, data) => socket.to(roomId).emit('receive-chat', data));
     
-    // Synchronize Layout Grid & Cameras
     socket.on('sync-layout', (roomId, layoutPositions) => socket.to(roomId).emit('sync-layout', layoutPositions));
+    
     socket.on('flip-camera', (roomId, isFlippedState) => {
         const room = activeRooms[roomId];
-        if (room && room.players[socket.id]) {
-            room.players[socket.id].isFlipped = isFlippedState;
-            socket.to(roomId).emit('camera-flipped', { seat: room.players[socket.id].seat, isFlipped: isFlippedState });
+        if (room) {
+            const playerId = room.sockets[socket.id];
+            if (playerId && room.players[playerId]) {
+                room.players[playerId].isFlipped = isFlippedState;
+                socket.to(roomId).emit('camera-flipped', { seat: room.players[playerId].seat, isFlipped: isFlippedState });
+            }
         }
     });
 
     // 3. Handle Leaving
-    socket.on('leave-room', (roomId) => handleDisconnect(socket, roomId));
+    socket.on('leave-room', (roomId) => handleDisconnect(socket, roomId, true));
 
     socket.on('disconnect', () => {
         for (const roomId in activeRooms) {
             if (activeRooms[roomId].peers.includes(socket.id) || activeRooms[roomId].spectators > 0) {
-                handleDisconnect(socket, roomId);
+                handleDisconnect(socket, roomId, false);
             }
         }
     });
 
-    function handleDisconnect(socket, roomId) {
+    function handleDisconnect(socket, roomId, isExplicit) {
         const room = activeRooms[roomId];
         if (!room) return;
 
         if (room.peers.includes(socket.id)) {
-            const playerData = room.players[socket.id];
-            if (playerData) {
-                room.availableSeats.push(playerData.seat);
-                room.availableSeats.sort((a, b) => a - b);
-                delete room.players[socket.id];
-                socket.to(roomId).emit('player-left', { socketId: socket.id, seat: playerData.seat });
-            }
-            
-            room.peers = room.peers.filter(id => id !== socket.id);
-            room.currentPlayers--;
-            socket.leave(roomId);
+            const playerId = room.sockets[socket.id];
+            const playerData = room.players[playerId];
 
-            if (room.currentPlayers <= 0) delete activeRooms[roomId];
+            if (isExplicit) {
+                if (playerData) {
+                    room.availableSeats.push(playerData.seat);
+                    room.availableSeats.sort((a, b) => a - b);
+                    socket.to(roomId).emit('player-left', { socketId: socket.id, seat: playerData.seat });
+                }
+                if (playerId) delete room.players[playerId];
+                delete room.sockets[socket.id];
+                room.peers = room.peers.filter(id => id !== socket.id);
+                room.currentPlayers--;
+                socket.leave(roomId);
+
+                if (room.currentPlayers <= 0) delete activeRooms[roomId];
+            } else {
+                if (playerData) {
+                    playerData.isConnected = false;
+                    socket.to(roomId).emit('player-dropped', { socketId: socket.id, seat: playerData.seat });
+                }
+            }
         } else if (room.spectators > 0) {
             room.spectators--;
             socket.leave(roomId);
