@@ -47,24 +47,30 @@ window.addEventListener('DOMContentLoaded', () => {
     const inviteRoom = urlParams.get('room');
 
     if (inviteRoom) {
-        document.getElementById('right-panel-header').innerHTML = `
-            <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-            JOIN INVITE
-        `;
-        document.getElementById('right-panel-header').classList.replace('text-cyan-400', 'text-emerald-400');
+        const header = document.getElementById('right-panel-header');
+        if (header) {
+            header.innerHTML = `
+                <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                JOIN INVITE
+            `;
+            header.classList.replace('text-cyan-400', 'text-emerald-400');
+        }
         
-        // Hide standard host options
-        document.getElementById('host-options').classList.add('hidden');
+        // Hide standard host options for invited users
+        const hostOptions = document.getElementById('host-options');
+        if (hostOptions) hostOptions.classList.add('hidden');
         
         // Change launch button to connect directly to the room
         const launchBtn = document.getElementById('launch-btn');
-        launchBtn.textContent = 'JOIN DUEL';
-        launchBtn.classList.replace('bg-cyan-700', 'bg-emerald-700');
-        launchBtn.classList.replace('hover:bg-cyan-600', 'hover:bg-emerald-600');
-        launchBtn.classList.replace('border-cyan-400', 'border-emerald-400');
-        launchBtn.classList.replace('text-cyan-50', 'text-emerald-50');
-        launchBtn.style.boxShadow = '0 0 20px rgba(16,185,129,0.4)';
-        launchBtn.onclick = function() { joinServerRoom(inviteRoom, false, this); };
+        if (launchBtn) {
+            launchBtn.textContent = 'JOIN DUEL';
+            launchBtn.classList.replace('bg-cyan-700', 'bg-emerald-700');
+            launchBtn.classList.replace('hover:bg-cyan-600', 'hover:bg-emerald-600');
+            launchBtn.classList.replace('border-cyan-400', 'border-emerald-400');
+            launchBtn.classList.replace('text-cyan-50', 'text-emerald-50');
+            launchBtn.style.boxShadow = '0 0 20px rgba(16,185,129,0.4)';
+            launchBtn.onclick = function() { joinServerRoom(inviteRoom, false, this); };
+        }
     }
 
     openCalc(1);
@@ -112,25 +118,30 @@ window.addEventListener('DOMContentLoaded', () => {
             totalPlayers = room.maxPlayers;
             peerGridMap = {}; 
 
-            // Modify URL with room invite link silently
+            // FORCE URL UPDATE WITH ROOM ID FOR INSTANT INVITES
             window.history.pushState({}, '', '?room=' + room.id);
-            document.getElementById('copy-link-btn').classList.remove('hidden');
+            const copyLinkBtn = document.getElementById('copy-link-btn');
+            if (copyLinkBtn) copyLinkBtn.classList.remove('hidden');
 
-            document.getElementById('setup-modal').classList.add('hidden');
-            document.getElementById('setup-modal').classList.remove('flex');
+            const setupModal = document.getElementById('setup-modal');
+            if (setupModal) {
+                setupModal.classList.add('hidden');
+                setupModal.classList.remove('flex');
+            }
             
             const grid = document.getElementById('video-grid');
-            grid.className = 'flex-1 grid gap-0 min-h-0 h-full p-0 bg-black z-0';
-
-            if (totalPlayers === 2) {
-                grid.classList.add('grid-cols-1', 'grid-rows-2', 'lg:grid-cols-2', 'lg:grid-rows-1');
-                playerGridPositions = [1, 2];
-            } else if (totalPlayers <= 4) {
-                grid.classList.add('grid-cols-2', 'grid-rows-2');
-                playerGridPositions = totalPlayers === 3 ? [1, 2, 3] : [1, 2, 3, 4];
-            } else {
-                grid.classList.add('grid-cols-3', 'grid-rows-2');
-                playerGridPositions = totalPlayers === 5 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6];
+            if (grid) {
+                grid.className = 'flex-1 grid gap-0 min-h-0 h-full p-0 bg-black z-0';
+                if (totalPlayers === 2) {
+                    grid.classList.add('grid-cols-1', 'grid-rows-2', 'lg:grid-cols-2', 'lg:grid-rows-1');
+                    playerGridPositions = [1, 2];
+                } else if (totalPlayers <= 4) {
+                    grid.classList.add('grid-cols-2', 'grid-rows-2');
+                    playerGridPositions = totalPlayers === 3 ? [1, 2, 3] : [1, 2, 3, 4];
+                } else {
+                    grid.classList.add('grid-cols-3', 'grid-rows-2');
+                    playerGridPositions = totalPlayers === 5 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6];
+                }
             }
 
             for(let i = 1; i <= 6; i++) {
@@ -401,12 +412,13 @@ function freeGridSlot(socketId, seat) {
 }
 
 function copyInviteLink() {
-    const url = window.location.href;
+    const url = window.location.href; // Captures the exact URL (now containing ?room=...)
     navigator.clipboard.writeText(url).then(() => {
         addLog('System', 'Invite link copied to clipboard!', 'text-emerald-400 font-bold');
         const btn = document.getElementById('copy-link-btn');
-        const originalHTML = btn.innerHTML;
+        if (!btn) return;
         
+        const originalHTML = btn.innerHTML;
         btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> COPIED!`;
         btn.classList.replace('bg-emerald-900/80', 'bg-emerald-600');
         
@@ -549,21 +561,26 @@ async function launchRoom(btn) {
         });
     }
 
-    document.getElementById('setup-modal').classList.add('hidden');
-    document.getElementById('setup-modal').classList.remove('flex');
+    const modal = document.getElementById('setup-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
     
     const grid = document.getElementById('video-grid');
-    grid.className = 'flex-1 grid gap-0 min-h-0 h-full p-0 bg-black';
-    
-    if (totalPlayers === 2) {
-        grid.classList.add('grid-cols-1', 'grid-rows-2');
-        playerGridPositions = [1, 2];
-    } else if (totalPlayers <= 4) {
-        grid.classList.add('grid-cols-2', 'grid-rows-2');
-        playerGridPositions = totalPlayers === 3 ? [1, 2, 3] : [1, 2, 3, 4];
-    } else {
-        grid.classList.add('grid-cols-3', 'grid-rows-2');
-        playerGridPositions = totalPlayers === 5 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6];
+    if (grid) {
+        grid.className = 'flex-1 grid gap-0 min-h-0 h-full p-0 bg-black';
+        
+        if (totalPlayers === 2) {
+            grid.classList.add('grid-cols-1', 'grid-rows-2');
+            playerGridPositions = [1, 2];
+        } else if (totalPlayers <= 4) {
+            grid.classList.add('grid-cols-2', 'grid-rows-2');
+            playerGridPositions = totalPlayers === 3 ? [1, 2, 3] : [1, 2, 3, 4];
+        } else {
+            grid.classList.add('grid-cols-3', 'grid-rows-2');
+            playerGridPositions = totalPlayers === 5 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6];
+        }
     }
 
     for(let i = 1; i <= 6; i++) {
@@ -600,8 +617,11 @@ async function joinServerRoom(roomId, isSpectator, btn) {
     const guestName = document.getElementById('setup-name').value || 'Player';
 
     if(socket && socket.connected) {
-        document.getElementById('setup-modal').classList.add('hidden');
-        document.getElementById('setup-modal').classList.remove('flex');
+        const modal = document.getElementById('setup-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
         
         socket.emit('join-room', roomId, isSpectator, guestName, myPlayerId);
         currentRoomId = roomId;
@@ -640,23 +660,36 @@ function leaveRoom() {
     logEl.innerHTML = '<div class="text-zinc-500 italic">Waiting for room configuration...</div>';
     clearCalc();
     
+    // Clear URL parameter so it doesn't instantly join again if refreshed
     window.history.pushState({}, '', window.location.pathname);
-    document.getElementById('copy-link-btn').classList.add('hidden');
+    
+    const copyBtn = document.getElementById('copy-link-btn');
+    if (copyBtn) copyBtn.classList.add('hidden');
 
-    document.getElementById('right-panel-header').innerHTML = `
-        <svg class="w-10 h-10 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/></svg>
-        HOST ROOM
-    `;
-    document.getElementById('right-panel-header').className = "font-display text-5xl tracking-wider text-cyan-400 uppercase drop-shadow-lg leading-none flex items-center justify-center gap-3";
-    document.getElementById('host-options').classList.remove('hidden');
+    const rightPanelHeader = document.getElementById('right-panel-header');
+    if (rightPanelHeader) {
+        rightPanelHeader.innerHTML = `
+            <svg class="w-10 h-10 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z"/></svg>
+            HOST ROOM
+        `;
+        rightPanelHeader.className = "font-display text-5xl tracking-wider text-cyan-400 uppercase drop-shadow-lg leading-none flex items-center justify-center gap-3";
+    }
+    
+    const hostOptions = document.getElementById('host-options');
+    if (hostOptions) hostOptions.classList.remove('hidden');
     
     const launchBtn = document.getElementById('launch-btn');
-    launchBtn.textContent = 'Initialize Room';
-    launchBtn.className = "w-full bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 text-cyan-50 font-bold py-3 px-8 rounded-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] transition text-sm tracking-widest uppercase hover:scale-105 transform";
-    launchBtn.onclick = function() { launchRoom(this); };
+    if (launchBtn) {
+        launchBtn.textContent = 'Initialize Room';
+        launchBtn.className = "w-full bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 text-cyan-50 font-bold py-3 px-8 rounded-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] transition text-sm tracking-widest uppercase hover:scale-105 transform";
+        launchBtn.onclick = function() { launchRoom(this); };
+    }
 
-    document.getElementById('setup-modal').classList.remove('hidden');
-    document.getElementById('setup-modal').classList.add('flex');
+    const modal = document.getElementById('setup-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
     
     hasInitializedCam = false;
     isCamOn = false;
@@ -711,6 +744,7 @@ function toggleFlip(playerNum) {
         if (placeholder) placeholder.style.transform = transformValue;
     }
 
+    // Refresh seat inner-corner logic to ensure flipped cams lock to center properly
     randomizeSeats(false); 
 }
 
@@ -764,10 +798,12 @@ function randomizeSeats(shuffle = true) {
         let yPos = isTopRow ? 'bottom' : 'top';
         if (cols === 1) xPos = 'center';
 
+        // Player 1 is mirrored horizontally (scaleX(-1)), so we have to inverse X logic
         if (playerNum === 1 && cols !== 1) {
             xPos = (xPos === 'right') ? 'left' : (xPos === 'left' ? 'right' : 'center');
         }
 
+        // If a player flipped their overhead cam vertically, invert the Y logic
         if (isFlipped[playerNum]) {
             yPos = (yPos === 'top') ? 'bottom' : 'top';
         }
@@ -837,8 +873,11 @@ function startDuelTimer() {
         }
         
         const p = clockwiseOrder[currentIndex];
-        const innerBox = document.getElementById(`p${p}-lp-wrapper`).firstElementChild;
-        innerBox.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+        const wrapper = document.getElementById(`p${p}-lp-wrapper`);
+        if(wrapper) {
+            const innerBox = wrapper.firstElementChild;
+            innerBox.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+        }
 
         ticks++;
         
@@ -864,7 +903,8 @@ function updateTimer() {
     const h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
     const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
     const s = (elapsed % 60).toString().padStart(2, '0');
-    document.getElementById('duel-timer').textContent = `${h}:${m}:${s}`;
+    const timerEl = document.getElementById('duel-timer');
+    if(timerEl) timerEl.textContent = `${h}:${m}:${s}`;
 }
 
 function stopDuelTimer() {
@@ -872,12 +912,16 @@ function stopDuelTimer() {
     duelActive = false;
     clearInterval(timerInterval);
     const timerEl = document.getElementById('duel-timer');
-    timerEl.classList.remove('text-cyan-400');
-    timerEl.classList.add('text-amber-400', 'animate-pulse');
+    if (timerEl) {
+        timerEl.classList.remove('text-cyan-400');
+        timerEl.classList.add('text-amber-400', 'animate-pulse');
+    }
     
     const btn = document.getElementById('start-duel-btn');
-    btn.classList.remove('hidden');
-    btn.textContent = 'NEW DUEL!';
+    if (btn) {
+        btn.classList.remove('hidden');
+        btn.textContent = 'NEW DUEL!';
+    }
 
     if (activePlayerTurn) {
         const wrapper = document.getElementById(`p${activePlayerTurn}-lp-wrapper`);
@@ -923,14 +967,14 @@ function passTurn(forcePassFrom = null) {
     }
     
     if (!forcePassFrom && activePlayerTurn) {
-        const oldBox = document.getElementById(`p${activePlayerTurn}-lp-wrapper`).firstElementChild;
-        oldBox.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+        const wrapper = document.getElementById(`p${activePlayerTurn}-lp-wrapper`);
+        if (wrapper) wrapper.firstElementChild.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
     }
     
     if (nextPlayer) {
         activePlayerTurn = nextPlayer;
-        const newBox = document.getElementById(`p${activePlayerTurn}-lp-wrapper`).firstElementChild;
-        newBox.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
+        const wrapper = document.getElementById(`p${activePlayerTurn}-lp-wrapper`);
+        if (wrapper) wrapper.firstElementChild.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-black', 'shadow-[0_0_20px_rgba(251,191,36,0.6)]');
         addLog('System', `Turn passed to P${activePlayerTurn}`, 'text-amber-200');
     } else {
         activePlayerTurn = null; 
@@ -988,14 +1032,14 @@ async function initWebcam() {
         isCamOn = true;
         document.getElementById('cam-icon-on').classList.remove('hidden');
         document.getElementById('cam-icon-off').classList.add('hidden');
-        errorOverlay.classList.add('hidden');
+        if (errorOverlay) errorOverlay.classList.add('hidden');
     } catch (err) {
         console.warn("Camera access restricted:", err.message);
         isCamOn = false;
         document.getElementById('cam-icon-on').classList.add('hidden');
         document.getElementById('cam-icon-off').classList.remove('hidden');
-        errorText.textContent = 'Camera Blocked/Unavailable';
-        errorOverlay.classList.remove('hidden');
+        if (errorText) errorText.textContent = 'Camera Blocked/Unavailable';
+        if (errorOverlay) errorOverlay.classList.remove('hidden');
         addLog('System', `Media notice: Camera unavailable.`, 'text-amber-500');
     }
 
@@ -1013,7 +1057,7 @@ async function initWebcam() {
         addLog('System', `Media notice: Mic unavailable.`, 'text-amber-500');
     }
 
-    if (localStream.getTracks().length > 0) {
+    if (videoEl && localStream.getTracks().length > 0) {
         videoEl.srcObject = localStream;
     }
 }
@@ -1068,8 +1112,9 @@ async function toggleCam() {
         isCamOn = false;
         document.getElementById('cam-icon-on').classList.add('hidden');
         document.getElementById('cam-icon-off').classList.remove('hidden');
-        errorOverlay.classList.remove('hidden');
-        document.getElementById('cam-error-text').textContent = 'Camera Off';
+        if (errorOverlay) errorOverlay.classList.remove('hidden');
+        const errText = document.getElementById('cam-error-text');
+        if (errText) errText.textContent = 'Camera Off';
         addLog('System', 'Camera disabled.');
     } else {
         try {
@@ -1087,17 +1132,20 @@ async function toggleCam() {
                 else pc.addTrack(newVideoTrack, localStream);
             });
             
-            videoEl.srcObject = null;
-            videoEl.srcObject = localStream;
+            if (videoEl) {
+                videoEl.srcObject = null;
+                videoEl.srcObject = localStream;
+            }
             isCamOn = true;
             
             document.getElementById('cam-icon-on').classList.remove('hidden');
             document.getElementById('cam-icon-off').classList.add('hidden');
-            errorOverlay.classList.add('hidden'); 
+            if (errorOverlay) errorOverlay.classList.add('hidden'); 
             addLog('System', 'Camera enabled.');
         } catch (err) {
-            document.getElementById('cam-error-text').textContent = 'Permission Denied';
-            errorOverlay.classList.remove('hidden');
+            const errText = document.getElementById('cam-error-text');
+            if (errText) errText.textContent = 'Permission Denied';
+            if (errorOverlay) errorOverlay.classList.remove('hidden');
             addLog('System', `Media notice: Camera Denied.`, 'text-amber-500');
         }
     }
@@ -1198,11 +1246,13 @@ function openCalc(playerNum) {
     if(playerNum === 5) pColor = 'orange-500';
     if(playerNum === 6) pColor = 'pink-500';
 
-    label.className = `text-xs font-bold uppercase tracking-widest text-${pColor} drop-shadow-md`;
-    label.textContent = playerNum === 1 ? `Your Life Points (P1)` : `P${playerNum} Life Points`;
+    if (label) {
+        label.className = `text-xs font-bold uppercase tracking-widest text-${pColor} drop-shadow-md`;
+        label.textContent = playerNum === 1 ? `Your Life Points (P1)` : `P${playerNum} Life Points`;
+    }
     
     const input = document.getElementById('calc-input');
-    input.focus();
+    if (input) input.focus();
 }
 
 function clearCalc() {
@@ -1215,22 +1265,27 @@ function clearCalc() {
 
 function calcType(val) {
     const input = document.getElementById('calc-input');
-    input.value += val;
-    input.focus();
+    if (input) {
+        input.value += val;
+        input.focus();
+    }
 }
 
 function calcBksp() {
     const input = document.getElementById('calc-input');
-    input.value = input.value.slice(0, -1);
-    input.focus();
+    if (input) {
+        input.value = input.value.slice(0, -1);
+        input.focus();
+    }
 }
 
 function calcAction(actionType) {
     if (!activeCalcPlayer) activeCalcPlayer = 1;
     
     const input = document.getElementById('calc-input');
+    if (!input) return;
+
     const val = parseInt(input.value);
-    
     if (isNaN(val) || val < 0) {
         clearCalc();
         return;
@@ -1243,18 +1298,21 @@ function calcAction(actionType) {
     clearCalc();
 }
 
-document.getElementById('calc-input').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        calcAction('set');
-        e.preventDefault();
-    } else if (e.key === '-' || e.key === 'Subtract') {
-        calcAction('dmg');
-        e.preventDefault();
-    } else if (e.key === '+' || e.key === 'Add') {
-        calcAction('heal');
-        e.preventDefault();
-    }
-});
+const calcInputBox = document.getElementById('calc-input');
+if (calcInputBox) {
+    calcInputBox.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            calcAction('set');
+            e.preventDefault();
+        } else if (e.key === '-' || e.key === 'Subtract') {
+            calcAction('dmg');
+            e.preventDefault();
+        } else if (e.key === '+' || e.key === 'Add') {
+            calcAction('heal');
+            e.preventDefault();
+        }
+    });
+}
 
 function updateLPDisplay(player) {
     const currentLP = lp[player];
@@ -1408,6 +1466,7 @@ let searchSelectedIndex = -1;
 async function searchCard(query) {
     clearTimeout(searchTimeout);
     const resultsBox = document.getElementById('search-results');
+    if (!resultsBox) return;
     
     if (!query || query.length < 3) {
         resultsBox.classList.add('hidden');
@@ -1441,7 +1500,7 @@ async function searchCard(query) {
 
 function handleSearchKey(e) {
     const resultsBox = document.getElementById('search-results');
-    if (resultsBox.classList.contains('hidden')) return;
+    if (!resultsBox || resultsBox.classList.contains('hidden')) return;
 
     const items = resultsBox.getElementsByClassName('search-item');
     if (items.length === 0) return;
@@ -1478,46 +1537,59 @@ function updateSearchSelection(items) {
 }
 
 function selectCard(card) {
-    document.getElementById('search-results').classList.add('hidden');
-    document.getElementById('card-search').value = '';
+    const searchResults = document.getElementById('search-results');
+    if(searchResults) searchResults.classList.add('hidden');
     
-    document.getElementById('preview-placeholder').classList.add('hidden');
+    const cardSearch = document.getElementById('card-search');
+    if(cardSearch) cardSearch.value = '';
+    
+    const placeholder = document.getElementById('preview-placeholder');
+    if(placeholder) placeholder.classList.add('hidden');
+    
     const previewContainer = document.getElementById('card-preview');
-    previewContainer.classList.remove('hidden');
-    previewContainer.classList.add('flex');
+    if(previewContainer) {
+        previewContainer.classList.remove('hidden');
+        previewContainer.classList.add('flex');
+    }
     
-    document.getElementById('preview-img').src = card.card_images[0].image_url;
-    document.getElementById('preview-name').textContent = card.name;
+    const previewImg = document.getElementById('preview-img');
+    if(previewImg) previewImg.src = card.card_images[0].image_url;
+    
+    const previewName = document.getElementById('preview-name');
+    if(previewName) previewName.textContent = card.name;
     
     const statsEl = document.getElementById('preview-stats');
-    statsEl.innerHTML = '';
-    statsEl.classList.remove('hidden');
-    
-    if (card.type && card.type.includes("Monster")) {
-        let levelStr = "";
-        if (card.type.includes("XYZ")) levelStr = `Rank ${card.level}`;
-        else if (card.type.includes("Link")) levelStr = `Link-${card.linkval}`;
-        else if (card.level !== undefined) levelStr = `Level ${card.level}`;
+    if(statsEl) {
+        statsEl.innerHTML = '';
+        statsEl.classList.remove('hidden');
+        
+        if (card.type && card.type.includes("Monster")) {
+            let levelStr = "";
+            if (card.type.includes("XYZ")) levelStr = `Rank ${card.level}`;
+            else if (card.type.includes("Link")) levelStr = `Link-${card.linkval}`;
+            else if (card.level !== undefined) levelStr = `Level ${card.level}`;
 
-        let atkDefStr = `ATK ${card.atk !== undefined ? card.atk : '?'}`;
-        if (card.def !== undefined) atkDefStr += ` / DEF ${card.def}`;
+            let atkDefStr = `ATK ${card.atk !== undefined ? card.atk : '?'}`;
+            if (card.def !== undefined) atkDefStr += ` / DEF ${card.def}`;
 
-        statsEl.innerHTML = `
-            ${card.attribute ? `<span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.attribute}</span>` : ''}
-            ${levelStr ? `<span class="bg-zinc-800 px-1 rounded border border-zinc-700">${levelStr}</span>` : ''}
-            <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.race} / ${card.type.replace(' Monster', '')}</span>
-            <span class="bg-zinc-800 px-1 rounded border border-zinc-700 font-bold text-amber-200">${atkDefStr}</span>
-        `;
-    } else if (card.type && (card.type.includes("Spell") || card.type.includes("Trap"))) {
-        statsEl.innerHTML = `
-            <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.type}</span>
-            <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.race}</span>
-        `;
-    } else {
-        statsEl.classList.add('hidden');
+            statsEl.innerHTML = `
+                ${card.attribute ? `<span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.attribute}</span>` : ''}
+                ${levelStr ? `<span class="bg-zinc-800 px-1 rounded border border-zinc-700">${levelStr}</span>` : ''}
+                <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.race} / ${card.type.replace(' Monster', '')}</span>
+                <span class="bg-zinc-800 px-1 rounded border border-zinc-700 font-bold text-amber-200">${atkDefStr}</span>
+            `;
+        } else if (card.type && (card.type.includes("Spell") || card.type.includes("Trap"))) {
+            statsEl.innerHTML = `
+                <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.type}</span>
+                <span class="bg-zinc-800 px-1 rounded border border-zinc-700">${card.race}</span>
+            `;
+        } else {
+            statsEl.classList.add('hidden');
+        }
     }
 
-    document.getElementById('preview-desc').textContent = card.desc;
+    const previewDesc = document.getElementById('preview-desc');
+    if(previewDesc) previewDesc.textContent = card.desc;
     
     if (cardHistory.length === 0 || cardHistory[0].id !== card.id) {
         addLog('System', `Viewed card: <span class="font-bold text-cyan-300">${card.name}</span>`);
@@ -1536,6 +1608,7 @@ function updateCardHistory(card) {
 function renderCardHistory() {
     const list = document.getElementById('card-history-list');
     const emptyState = document.getElementById('empty-history');
+    if(!list || !emptyState) return;
     
     if (cardHistory.length > 0) {
         emptyState.classList.add('hidden');
@@ -1691,25 +1764,34 @@ function openDMSearch(playerNum) {
     
     targetDMPlayer = playerNum;
     const modal = document.getElementById('dm-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    if(modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
     
     const input = document.getElementById('dm-search-input');
-    input.value = '';
-    input.focus();
-    document.getElementById('dm-search-results').innerHTML = '<div class="text-zinc-600 text-xs italic text-center py-4">Type a card name to search...</div>';
+    if(input) {
+        input.value = '';
+        input.focus();
+    }
+    
+    const dmResults = document.getElementById('dm-search-results');
+    if(dmResults) dmResults.innerHTML = '<div class="text-zinc-600 text-xs italic text-center py-4">Type a card name to search...</div>';
 }
 
 function closeDMSearch() {
     const modal = document.getElementById('dm-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    if(modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
     targetDMPlayer = null;
 }
 
 async function searchDMCard(query) {
     clearTimeout(dmSearchTimeout);
     const resultsBox = document.getElementById('dm-search-results');
+    if(!resultsBox) return;
     
     if (!query || query.length < 3) {
         resultsBox.innerHTML = '<div class="text-zinc-600 text-xs italic text-center py-4">Type a card name to search...</div>';
@@ -1760,6 +1842,8 @@ async function searchDMCard(query) {
 
 function handleDMSearchKey(e) {
     const resultsBox = document.getElementById('dm-search-results');
+    if(!resultsBox) return;
+    
     const items = resultsBox.getElementsByClassName('dm-search-item');
     if (items.length === 0) return;
 
@@ -1802,12 +1886,15 @@ function selectDMCard(card) {
     const imgEl = document.getElementById(`p${targetDMPlayer}-dm-img`);
     const containerEl = document.getElementById(`p${targetDMPlayer}-dm-container`);
     
-    imgEl.src = `https://images.ygoprodeck.com/images/cards_cropped/${card.id}.jpg`;
-    imgEl.onerror = function() { this.src = card.card_images[0].image_url_small; };
-    containerEl.classList.remove('hidden');
+    if(imgEl) {
+        imgEl.src = `https://images.ygoprodeck.com/images/cards_cropped/${card.id}.jpg`;
+        imgEl.onerror = function() { this.src = card.card_images[0].image_url_small; };
+    }
+    if(containerEl) containerEl.classList.remove('hidden');
     
     dmCounts[targetDMPlayer] = 0;
-    document.getElementById(`p${targetDMPlayer}-dm-counter`).textContent = '0';
+    const dmCounter = document.getElementById(`p${targetDMPlayer}-dm-counter`);
+    if(dmCounter) dmCounter.textContent = '0';
     
     let pColor = 'text-blue-400';
     if(targetDMPlayer === 2) pColor = 'text-red-500';
@@ -1836,12 +1923,13 @@ function handleDMClick(e, playerNum) {
     }
     
     const counterEl = document.getElementById(`p${playerNum}-dm-counter`);
-    counterEl.textContent = dmCounts[playerNum];
-    
-    counterEl.classList.add('scale-125', 'bg-amber-300');
-    setTimeout(() => {
-        counterEl.classList.remove('scale-125', 'bg-amber-300');
-    }, 150);
+    if(counterEl) {
+        counterEl.textContent = dmCounts[playerNum];
+        counterEl.classList.add('scale-125', 'bg-amber-300');
+        setTimeout(() => {
+            counterEl.classList.remove('scale-125', 'bg-amber-300');
+        }, 150);
+    }
 
     if (socket && currentRoomId) {
         socket.emit('update-dm-count', currentRoomId, { seat: playerNum, dmCount: dmCounts[playerNum] });
