@@ -1,5 +1,3 @@
-/* Script for BATTLE CITY! */
-
 let totalPlayers = 4;
 let mySeat = null; 
 let roomPlayers = {}; 
@@ -284,7 +282,8 @@ window.addEventListener('DOMContentLoaded', () => {
             if (placeholder) {
                 placeholder.classList.remove('hidden');
                 placeholder.classList.add('flex');
-                placeholder.querySelector('span').textContent = 'Disconnected';
+                const span = placeholder.querySelector('span');
+                if (span) span.textContent = 'Disconnected';
             }
             addLog('System', `P${data.seat} dropped connection. Waiting for reconnect...`, 'text-amber-500');
         });
@@ -355,9 +354,13 @@ function freeGridSlot(socketId, seat) {
         if (placeholder) {
             placeholder.classList.remove('hidden');
             placeholder.classList.add('flex');
-            placeholder.querySelector('span').textContent = `Awaiting P${slot}...`;
+            const span = placeholder.querySelector('span');
+            if (span) span.textContent = `Awaiting P${slot}...`;
         }
-        document.getElementById(`p${slot}-name`).textContent = `P${slot}`;
+        
+        const nameEl = document.getElementById(`p${slot}-name`) || document.querySelector(`#p${slot}-container h2`);
+        if (nameEl) nameEl.textContent = `P${slot}`;
+        
         delete peerGridMap[socketId];
         addLog('System', `P${slot} disconnected permanently.`, 'text-red-400');
     }
