@@ -835,12 +835,7 @@ function toggleFlip(playerNum) {
 
     randomizeSeats(false); 
 }
-function changeBoxOpacity(playerNum, value) {
-    const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
-    if (wrapper) {
-        wrapper.style.opacity = value;
-    }
-}
+
 let timerInterval = null;
 let duelStartTime = null;
 let duelActive = false;
