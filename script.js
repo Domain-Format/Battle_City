@@ -78,8 +78,16 @@ window.addEventListener('DOMContentLoaded', () => {
                         if (pData) {
                             if (pData.socketId && pData.socketId !== socket.id) peerGridMap[pData.socketId] = pData.seat;
 
-                            document.getElementById(`p${i}-name`).textContent = pData.name;
-                            document.getElementById(`p${i}-placeholder`).querySelector('span').textContent = pData.isConnected ? 'Connecting...' : 'Disconnected';
+                            // SAFE NAME ASSIGNMENT
+                            const nameEl = document.getElementById(`p${i}-name`) || document.querySelector(`#grid-item-${i} h2.font-display`);
+                            if (nameEl) nameEl.textContent = pData.name;
+
+                            // SAFE PLACEHOLDER ASSIGNMENT
+                            const placeholder = document.getElementById(`p${i}-placeholder`);
+                            if (placeholder) {
+                                const span = placeholder.querySelector('span');
+                                if (span) span.textContent = pData.isConnected ? 'Connecting...' : 'Disconnected';
+                            }
                             
                             isFlipped[i] = pData.isFlipped || false;
                             const videoEl = document.getElementById(`p${i}-video`);
@@ -104,8 +112,15 @@ window.addEventListener('DOMContentLoaded', () => {
                             
                             if (pData.isEliminated) eliminatePlayerId(i, false);
                         } else {
-                            document.getElementById(`p${i}-name`).textContent = `P${i}`;
-                            document.getElementById(`p${i}-placeholder`).querySelector('span').textContent = `Awaiting P${i}...`;
+                            // SAFE DEFAULT NAME ASSIGNMENT
+                            const nameEl = document.getElementById(`p${i}-name`) || document.querySelector(`#grid-item-${i} h2.font-display`);
+                            if (nameEl) nameEl.textContent = `P${i}`;
+
+                            const placeholder = document.getElementById(`p${i}-placeholder`);
+                            if (placeholder) {
+                                const span = placeholder.querySelector('span');
+                                if (span) span.textContent = `Awaiting P${i}...`;
+                            }
                             lp[i] = 8000;
                             updateLPDisplay(i);
                         }
@@ -117,7 +132,9 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             if (mySeat) {
-                document.getElementById(`cam-btn-${mySeat}`).classList.remove('hidden');
+                const camBtn = document.getElementById(`cam-btn-${mySeat}`);
+                if (camBtn) camBtn.classList.remove('hidden');
+
                 activeCalcPlayer = mySeat;
                 document.getElementById('calc-target-label').textContent = `Your Life Points (P${mySeat})`;
                 
@@ -141,8 +158,15 @@ window.addEventListener('DOMContentLoaded', () => {
             roomPlayers[targetId] = { seat: data.seat, name: data.name };
             peerGridMap[targetId] = data.seat;
             
-            document.getElementById(`p${data.seat}-name`).textContent = data.name;
-            document.getElementById(`p${data.seat}-placeholder`).querySelector('span').textContent = 'Connecting...';
+            const nameEl = document.getElementById(`p${data.seat}-name`) || document.querySelector(`#grid-item-${data.seat} h2.font-display`);
+            if (nameEl) nameEl.textContent = data.name;
+
+            const placeholder = document.getElementById(`p${data.seat}-placeholder`);
+            if (placeholder) {
+                const span = placeholder.querySelector('span');
+                if (span) span.textContent = 'Connecting...';
+            }
+
             addLog('System', `<span class="text-cyan-300">${data.name}</span> joined the room as P${data.seat}!`, 'text-cyan-400 font-bold');
             
             const pc = createPeerConnection(targetId);
@@ -155,7 +179,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
         socket.on('player-reconnected', async (data) => {
             peerGridMap[data.newSocketId] = data.seat;
-            document.getElementById(`p${data.seat}-placeholder`).querySelector('span').textContent = 'Reconnecting...';
+
+            const placeholder = document.getElementById(`p${data.seat}-placeholder`);
+            if (placeholder) {
+                const span = placeholder.querySelector('span');
+                if (span) span.textContent = 'Reconnecting...';
+            }
+
             addLog('System', `P${data.seat} reconnected to the room!`, 'text-emerald-400 font-bold');
             
             const pc = createPeerConnection(data.newSocketId);
@@ -192,7 +222,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 imgEl.onerror = function() { this.src = data.card.card_images[0].image_url_small; };
                 containerEl.classList.remove('hidden');
                 dmCounts[data.seat] = 0;
-                document.getElementById(`p${data.seat}-dm-counter`).textContent = '0';
+                
+                const counterEl = document.getElementById(`p${data.seat}-dm-counter`);
+                if (counterEl) counterEl.textContent = '0';
                 
                 let pColor = 'text-blue-400';
                 if(data.seat === 2) pColor = 'text-red-500';
@@ -278,6 +310,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             const videoEl = document.getElementById(`p${data.seat}-video`);
             if (videoEl) videoEl.srcObject = null;
+            
             const placeholder = document.getElementById(`p${data.seat}-placeholder`);
             if (placeholder) {
                 placeholder.classList.remove('hidden');
@@ -351,6 +384,7 @@ function freeGridSlot(socketId, seat) {
         const videoEl = document.getElementById(`p${slot}-video`);
         const placeholder = document.getElementById(`p${slot}-placeholder`);
         if (videoEl) { videoEl.srcObject = null; videoEl.classList.add('hidden'); }
+        
         if (placeholder) {
             placeholder.classList.remove('hidden');
             placeholder.classList.add('flex');
@@ -358,7 +392,7 @@ function freeGridSlot(socketId, seat) {
             if (span) span.textContent = `Awaiting P${slot}...`;
         }
         
-        const nameEl = document.getElementById(`p${slot}-name`) || document.querySelector(`#p${slot}-container h2`);
+        const nameEl = document.getElementById(`p${slot}-name`) || document.querySelector(`#grid-item-${slot} h2.font-display`);
         if (nameEl) nameEl.textContent = `P${slot}`;
         
         delete peerGridMap[socketId];
@@ -410,7 +444,7 @@ function leaveRoom() {
     if (duelActive) stopDuelTimer();
     Object.values(peerConnections).forEach(pc => pc.close());
     peerConnections = {};
-    for (let i = 1; i <= 6; i++) freeGridSlot(i);
+    for (let i = 1; i <= 6; i++) freeGridSlot(null, i); // Pass seat numbers to free all visual slots safely
     mySeat = null; roomPlayers = {}; playerGridPositions = [1, 2, 3, 4, 5, 6];
     logEl.innerHTML = '<div class="text-zinc-500 italic">Waiting for room configuration...</div>';
     clearCalc();
@@ -424,7 +458,7 @@ async function initWebcam() {
     if (hasInitializedCam) return;
     hasInitializedCam = true;
 
-    const videoEl = document.getElementById(`p${mySeat}-video`);
+    const videoEl = document.getElementById(mySeat === 1 ? 'local-video' : `p${mySeat}-video`);
     const placeholder = document.getElementById(`p${mySeat}-placeholder`);
     const errorOverlay = document.getElementById(`cam-error-message`);
     const errorText = document.getElementById(`cam-error-text`);
@@ -462,18 +496,26 @@ async function initWebcam() {
     }
 
     // 3. Attach whatever we successfully got to the UI
-    videoEl.srcObject = localStream;
-    videoEl.muted = true;
-    videoEl.autoplay = true;
-    videoEl.style.transform = isFlipped[mySeat] ? 'scaleY(-1)' : 'scaleY(1)'; 
-    
-    if (isCamOn) {
-        videoEl.classList.remove('hidden');
-        if (placeholder) { placeholder.classList.add('hidden'); placeholder.classList.remove('flex'); }
-        if (errorOverlay) errorOverlay.classList.add('hidden');
-    } else {
-        if (errorText) errorText.textContent = 'Cam Blocked';
-        if (errorOverlay) errorOverlay.classList.remove('hidden');
+    if (videoEl) {
+        videoEl.srcObject = localStream;
+        videoEl.muted = true;
+        videoEl.autoplay = true;
+        
+        // Preserve standard transform for non-P1, or special flip for P1
+        if (mySeat === 1) {
+            videoEl.style.transform = isFlipped[mySeat] ? 'scaleX(-1) scaleY(-1)' : 'scaleX(-1)';
+        } else {
+            videoEl.style.transform = isFlipped[mySeat] ? 'scaleY(-1)' : 'scaleY(1)'; 
+        }
+
+        if (isCamOn) {
+            videoEl.classList.remove('hidden');
+            if (placeholder) { placeholder.classList.add('hidden'); placeholder.classList.remove('flex'); }
+            if (errorOverlay) errorOverlay.classList.add('hidden');
+        } else {
+            if (errorText) errorText.textContent = 'Cam Blocked';
+            if (errorOverlay) errorOverlay.classList.remove('hidden');
+        }
     }
 
     if (!isCamOn && !isMicOn) {
@@ -486,13 +528,11 @@ async function toggleMic() {
     const audioTracks = localStream.getAudioTracks();
     
     if (audioTracks.length > 0) {
-        // If track exists, just mute/unmute it (keeps connection stable)
         isMicOn = !isMicOn;
         audioTracks.forEach(t => t.enabled = isMicOn);
         document.getElementById('mic-icon-on').classList.toggle('hidden', !isMicOn);
         document.getElementById('mic-icon-off').classList.toggle('hidden', isMicOn);
     } else {
-        // If they originally blocked it, try asking for permission again
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const track = stream.getAudioTracks()[0];
@@ -516,39 +556,41 @@ async function toggleMic() {
 
 async function toggleCam() {
     if (!localStream) localStream = new MediaStream();
-    const videoEl = document.getElementById(`p${mySeat}-video`);
+    const videoEl = document.getElementById(mySeat === 1 ? 'local-video' : `p${mySeat}-video`);
     const placeholder = document.getElementById(`p${mySeat}-placeholder`);
     const errorOverlay = document.getElementById(`cam-error-message`);
     const videoTracks = localStream.getVideoTracks();
 
     if (isCamOn && videoTracks.length > 0) {
-        // Turn Camera completely off (kills the webcam light)
         videoTracks.forEach(t => t.stop());
         videoTracks.forEach(t => localStream.removeTrack(t));
         isCamOn = false;
         document.getElementById('cam-icon-on').classList.add('hidden'); 
         document.getElementById('cam-icon-off').classList.remove('hidden');
-        videoEl.classList.add('hidden');
+        if (videoEl) videoEl.classList.add('hidden');
         if (placeholder) { placeholder.classList.remove('hidden'); placeholder.classList.add('flex'); }
         addLog('System', 'Camera disabled.');
     } else {
-        // Try to turn Camera back on
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 } } });
             const track = stream.getVideoTracks()[0];
             localStream.addTrack(track);
             
             Object.values(peerConnections).forEach(pc => {
-                const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video' || s.track === null);
+                const sender = pc.getSenders().find(s => s.track && (s.track.kind === 'video' || s.track === null));
                 if (sender) sender.replaceTrack(track);
                 else pc.addTrack(track, localStream);
             });
             
-            videoEl.srcObject = localStream;
+            if (videoEl) {
+                videoEl.srcObject = localStream;
+                videoEl.classList.remove('hidden');
+            }
+            
             isCamOn = true;
             document.getElementById('cam-icon-on').classList.remove('hidden'); 
             document.getElementById('cam-icon-off').classList.add('hidden');
-            videoEl.classList.remove('hidden');
+            
             if (placeholder) { placeholder.classList.add('hidden'); placeholder.classList.remove('flex'); }
             if (errorOverlay) errorOverlay.classList.add('hidden');
             addLog('System', 'Camera enabled.');
@@ -586,8 +628,15 @@ document.addEventListener('click', (e) => {
 function toggleFlip(playerNum) {
     if (playerNum !== mySeat) return;
     isFlipped[playerNum] = !isFlipped[playerNum];
-    const videoEl = document.getElementById(`p${playerNum}-video`);
-    if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleY(-1)' : 'scaleY(1)';
+    
+    if (playerNum === 1) {
+        const videoEl = document.getElementById('local-video');
+        if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleX(-1) scaleY(-1)' : 'scaleX(-1)';
+    } else {
+        const videoEl = document.getElementById(`p${playerNum}-video`);
+        if (videoEl) videoEl.style.transform = isFlipped[playerNum] ? 'scaleY(-1)' : 'scaleY(1)';
+    }
+    
     if (socket && currentRoomId) socket.emit('flip-camera', currentRoomId, isFlipped[playerNum]);
 }
 
@@ -670,7 +719,9 @@ document.getElementById('calc-input').addEventListener('keydown', function(e) {
 
 function updateLPDisplay(player) {
     const currentLP = lp[player];
-    document.getElementById(`p${player}-lp`).textContent = currentLP;
+    const lpEl = document.getElementById(`p${player}-lp`);
+    if(lpEl) lpEl.textContent = currentLP;
+    
     const bar = document.getElementById(`p${player}-lp-bar`);
     if (bar) {
         const percentage = Math.min((currentLP / 8000) * 100, 100);
@@ -710,8 +761,10 @@ function handleDMClick(e, playerNum) {
     e.stopPropagation(); 
     if (e.button === 0) dmCounts[playerNum]++; else if (e.button === 2) dmCounts[playerNum] = Math.max(0, dmCounts[playerNum] - 1); 
     const counterEl = document.getElementById(`p${playerNum}-dm-counter`);
-    counterEl.textContent = dmCounts[playerNum];
-    counterEl.classList.add('scale-125', 'bg-amber-300'); setTimeout(() => counterEl.classList.remove('scale-125', 'bg-amber-300'), 150);
+    if(counterEl) {
+        counterEl.textContent = dmCounts[playerNum];
+        counterEl.classList.add('scale-125', 'bg-amber-300'); setTimeout(() => counterEl.classList.remove('scale-125', 'bg-amber-300'), 150);
+    }
     if (socket && currentRoomId) socket.emit('update-dm-count', currentRoomId, { seat: playerNum, dmCount: dmCounts[playerNum] });
 }
 
@@ -994,7 +1047,8 @@ function selectDMCard(card) {
         containerEl.classList.remove('hidden');
         
         dmCounts[targetDMPlayer] = 0;
-        document.getElementById(`p${targetDMPlayer}-dm-counter`).textContent = '0';
+        const counterEl = document.getElementById(`p${targetDMPlayer}-dm-counter`);
+        if (counterEl) counterEl.textContent = '0';
         
         let pColor = 'text-blue-400';
         if(targetDMPlayer === 2) pColor = 'text-red-500';
