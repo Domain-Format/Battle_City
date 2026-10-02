@@ -92,7 +92,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     for (let i = 2; i <= 6; i++) {
         const camBtn = document.getElementById(`cam-btn-${i}`);
-        if (camBtn) camBtn.classList.add('invisible');
+        if (camBtn) camBtn.classList.add('hidden');
         
         const lpWrapper = document.getElementById(`p${i}-lp-wrapper`);
         if (lpWrapper) {
