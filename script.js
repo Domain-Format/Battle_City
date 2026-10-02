@@ -18,8 +18,22 @@ let activeCalcPlayer = null;
 let dmCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 let dragState = { active: false, el: null, container: null, playerNum: null, startX: 0, startY: 0, initialLeft: 0, initialTop: 0, moved: false };
 
+// --- SESSION PERSISTENCE ---
+let myPlayerId;
+try {
+    myPlayerId = localStorage.getItem('ygo_player_id');
+    if (!myPlayerId) {
+        myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('ygo_player_id', myPlayerId);
+    }
+} catch(e) {
+    myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
+}
+
 const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 let peerConnections = {}; 
+let peerGridMap = {}; // Maps socket ID directly to seat number
+let iceCandidateQueues = {}; // Queue for WebRTC racing
 
 let socket = null;
 let currentRoomId = null;
@@ -44,6 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
             mySeat = assignedSeat;
             totalPlayers = room.maxPlayers;
             roomPlayers = room.players;
+            peerGridMap = {}; // Reset mappings on join
 
             document.getElementById('setup-modal').classList.add('hidden');
             document.getElementById('setup-modal').classList.remove('flex');
@@ -63,8 +78,10 @@ window.addEventListener('DOMContentLoaded', () => {
                         
                         const pData = Object.values(roomPlayers).find(p => p.seat === i);
                         if (pData) {
+                            if (pData.socketId && pData.socketId !== socket.id) peerGridMap[pData.socketId] = pData.seat;
+
                             document.getElementById(`p${i}-name`).textContent = pData.name;
-                            document.getElementById(`p${i}-placeholder`).querySelector('span').textContent = 'Connecting...';
+                            document.getElementById(`p${i}-placeholder`).querySelector('span').textContent = pData.isConnected ? 'Connecting...' : 'Disconnected';
                             
                             isFlipped[i] = pData.isFlipped || false;
                             const videoEl = document.getElementById(`p${i}-video`);
@@ -124,6 +141,7 @@ window.addEventListener('DOMContentLoaded', () => {
         socket.on('player-joined', async (data) => {
             const targetId = data.newPlayerId;
             roomPlayers[targetId] = { seat: data.seat, name: data.name };
+            peerGridMap[targetId] = data.seat;
             
             document.getElementById(`p${data.seat}-name`).textContent = data.name;
             document.getElementById(`p${data.seat}-placeholder`).querySelector('span').textContent = 'Connecting...';
@@ -135,6 +153,19 @@ window.addEventListener('DOMContentLoaded', () => {
                 await pc.setLocalDescription(offer);
                 socket.emit('webrtc-offer', { targetId: targetId, sdp: pc.localDescription });
             } catch (err) { console.error("Error creating WebRTC offer:", err); }
+        });
+
+        socket.on('player-reconnected', async (data) => {
+            peerGridMap[data.newSocketId] = data.seat;
+            document.getElementById(`p${data.seat}-placeholder`).querySelector('span').textContent = 'Reconnecting...';
+            addLog('System', `P${data.seat} reconnected to the room!`, 'text-emerald-400 font-bold');
+            
+            const pc = createPeerConnection(data.newSocketId);
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit('webrtc-offer', { targetId: data.newSocketId, sdp: pc.localDescription });
+            } catch (err) {}
         });
 
         socket.on('sync-layout', (layoutPositions) => { playerGridPositions = layoutPositions; randomizeSeats(false); });
@@ -201,6 +232,14 @@ window.addEventListener('DOMContentLoaded', () => {
             const pc = createPeerConnection(senderId);
             try {
                 await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+
+                if (iceCandidateQueues[senderId]) {
+                    for (let candidate of iceCandidateQueues[senderId]) {
+                        pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error(e));
+                    }
+                    delete iceCandidateQueues[senderId];
+                }
+
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
                 socket.emit('webrtc-answer', { targetId: senderId, sdp: pc.localDescription });
@@ -210,27 +249,53 @@ window.addEventListener('DOMContentLoaded', () => {
         socket.on('webrtc-answer', async (data) => {
             const pc = peerConnections[data.senderId];
             if (pc) {
-                try { await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); } 
+                try { 
+                    await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); 
+                    if (iceCandidateQueues[data.senderId]) {
+                        for (let candidate of iceCandidateQueues[data.senderId]) {
+                            pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error(e));
+                        }
+                        delete iceCandidateQueues[data.senderId];
+                    }
+                } 
                 catch (err) { console.error(err); }
             }
         });
 
         socket.on('webrtc-ice-candidate', async (data) => {
             const pc = peerConnections[data.senderId];
-            if (pc && data.candidate) {
+            if (pc && pc.remoteDescription) {
                 try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } 
                 catch (err) { console.error(err); }
+            } else {
+                if (!iceCandidateQueues[data.senderId]) iceCandidateQueues[data.senderId] = [];
+                iceCandidateQueues[data.senderId].push(data.candidate);
             }
         });
 
-        socket.on('player-left', (data) => {
-            const { socketId, seat } = data;
-            if (peerConnections[socketId]) {
-                peerConnections[socketId].close();
-                delete peerConnections[socketId];
+        socket.on('player-dropped', (data) => {
+            if (peerConnections[data.socketId]) {
+                peerConnections[data.socketId].close();
+                delete peerConnections[data.socketId];
             }
-            freeGridSlot(seat);
-            delete roomPlayers[socketId];
+            const videoEl = document.getElementById(`p${data.seat}-video`);
+            if (videoEl) videoEl.srcObject = null;
+            const placeholder = document.getElementById(`p${data.seat}-placeholder`);
+            if (placeholder) {
+                placeholder.classList.remove('hidden');
+                placeholder.classList.add('flex');
+                placeholder.querySelector('span').textContent = 'Disconnected';
+            }
+            addLog('System', `P${data.seat} dropped connection. Waiting for reconnect...`, 'text-amber-500');
+        });
+
+        socket.on('player-left', (data) => {
+            if (peerConnections[data.socketId]) {
+                peerConnections[data.socketId].close();
+                delete peerConnections[data.socketId];
+            }
+            freeGridSlot(data.socketId, data.seat);
+            delete roomPlayers[data.socketId];
         });
 
         socket.on('error', (msg) => { addLog('System', `Server Error: ${msg}`, 'text-red-500 font-bold'); });
@@ -254,7 +319,7 @@ function createPeerConnection(targetId) {
     };
 
     pc.ontrack = (event) => {
-        const slot = roomPlayers[targetId]?.seat;
+        const slot = peerGridMap[targetId];
         if (slot) {
             const videoEl = document.getElementById(`p${slot}-video`);
             const placeholder = document.getElementById(`p${slot}-placeholder`);
@@ -281,17 +346,21 @@ function createPeerConnection(targetId) {
     return pc;
 }
 
-function freeGridSlot(seat) {
-    const videoEl = document.getElementById(`p${seat}-video`);
-    const placeholder = document.getElementById(`p${seat}-placeholder`);
-    if (videoEl) { videoEl.srcObject = null; videoEl.classList.add('hidden'); }
-    if (placeholder) {
-        placeholder.classList.remove('hidden');
-        placeholder.classList.add('flex');
-        placeholder.querySelector('span').textContent = `Awaiting P${seat}...`;
+function freeGridSlot(socketId, seat) {
+    const slot = seat || peerGridMap[socketId];
+    if (slot) {
+        const videoEl = document.getElementById(`p${slot}-video`);
+        const placeholder = document.getElementById(`p${slot}-placeholder`);
+        if (videoEl) { videoEl.srcObject = null; videoEl.classList.add('hidden'); }
+        if (placeholder) {
+            placeholder.classList.remove('hidden');
+            placeholder.classList.add('flex');
+            placeholder.querySelector('span').textContent = `Awaiting P${slot}...`;
+        }
+        document.getElementById(`p${slot}-name`).textContent = `P${slot}`;
+        delete peerGridMap[socketId];
+        addLog('System', `P${slot} disconnected permanently.`, 'text-red-400');
     }
-    document.getElementById(`p${seat}-name`).textContent = `P${seat}`;
-    addLog('System', `P${seat} disconnected.`, 'text-red-400');
 }
 
 function launchRoom(btn) {
@@ -306,7 +375,7 @@ function launchRoom(btn) {
 
     if (socket && socket.connected) {
         socket.emit('create-room', {
-            hostName: hostName, roomName: roomName, format: format, maxPlayers: totalPlayersReq, isPrivate: isPrivate, allowSpectators: allowSpectators
+            hostName: hostName, roomName: roomName, format: format, maxPlayers: totalPlayersReq, isPrivate: isPrivate, allowSpectators: allowSpectators, playerId: myPlayerId
         });
     } else {
         if (btn) {
@@ -321,8 +390,9 @@ function joinServerRoom(roomId, isSpectator, btn) {
     if (btn) { btn.disabled = true; btn.innerText = 'Connecting...'; }
     const guestName = document.getElementById('setup-name').value || 'Player';
 
-    if(socket && socket.connected) socket.emit('join-room', roomId, isSpectator, guestName);
-    else {
+    if(socket && socket.connected) {
+        socket.emit('join-room', roomId, isSpectator, guestName, myPlayerId);
+    } else {
         if (btn) {
             btn.innerText = 'Server Offline';
             btn.classList.replace('bg-cyan-700', 'bg-red-700');
