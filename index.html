@@ -185,10 +185,10 @@
 
                     <!-- Combined Floating Name & LP -->
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p1-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 1)" class="bg-zinc-900/35 hover:bg-zinc-800/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <!-- Deck Master Interactive Counter -->
                             <div id="p1-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 1)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p1-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p1-dm-img" src="" class="h-[82px] w-auto object-contain rounded-sm border border-zinc-700/80 shadow-inner bg-zinc-950">
                                 <div id="p1-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
                             <div class="flex flex-col justify-center">
@@ -221,14 +221,14 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-blue-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(96,165,250,0.8)] pointer-events-none" id="p1-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p1-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <video id="p1-video" class="absolute inset-0 w-full h-full object-contain transition-transform duration-300" style="transform: scaleX(-1);" autoplay playsinline muted></video>
+                    <video id="local-video" class="absolute inset-0 w-full h-full object-contain transition-transform duration-300" style="transform: scaleX(-1);" autoplay playsinline muted></video>
                     
                     <div id="cam-error-message" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-zinc-900/90 backdrop-blur-sm z-10 pointer-events-none">
                         <svg class="w-6 h-6 text-red-500 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,10 +248,10 @@
 
                     <!-- Combined Floating Name & LP -->
                     <div class="absolute bottom-1 left-1 z-20 transition-all duration-300 ease-out" id="p2-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 2)" class="bg-zinc-900/35 hover:bg-zinc-800/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <!-- Deck Master Interactive Counter -->
                             <div id="p2-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 2)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p2-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p2-dm-img" src="" class="h-[82px] w-auto object-contain rounded-sm border border-zinc-700/80 shadow-inner bg-zinc-950">
                                 <div id="p2-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
                             <div class="flex flex-col justify-center">
@@ -276,7 +276,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-red-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] pointer-events-none" id="p2-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p2-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -302,10 +302,10 @@
 
                     <!-- Combined Floating Name & LP -->
                     <div class="absolute top-1 right-1 z-20 transition-all duration-300 ease-out" id="p3-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 3)" class="bg-zinc-900/35 hover:bg-zinc-800/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <!-- Deck Master Interactive Counter -->
                             <div id="p3-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 3)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p3-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p3-dm-img" src="" class="h-[82px] w-auto object-contain rounded-sm border border-zinc-700/80 shadow-inner bg-zinc-950">
                                 <div id="p3-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
                             <div class="flex flex-col justify-center">
@@ -330,7 +330,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-yellow-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] pointer-events-none" id="p3-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p3-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -356,10 +356,10 @@
 
                     <!-- Combined Floating Name & LP -->
                     <div class="absolute top-1 left-1 z-20 transition-all duration-300 ease-out" id="p4-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 4)" class="bg-zinc-900/35 hover:bg-zinc-800/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <!-- Deck Master Interactive Counter -->
                             <div id="p4-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 4)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p4-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p4-dm-img" src="" class="h-[82px] w-auto object-contain rounded-sm border border-zinc-700/80 shadow-inner bg-zinc-950">
                                 <div id="p4-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
                             <div class="flex flex-col justify-center">
@@ -384,7 +384,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-purple-400 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(192,132,252,0.8)] pointer-events-none" id="p4-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p4-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -407,10 +407,10 @@
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p5-container">
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p5-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 5)" class="bg-zinc-900/35 hover:bg-zinc-800/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <!-- Deck Master Interactive Counter -->
                             <div id="p5-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 5)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p5-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p5-dm-img" src="" class="h-[82px] w-auto object-contain rounded-sm border border-zinc-700/80 shadow-inner bg-zinc-950">
                                 <div id="p5-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
                             <div class="flex flex-col justify-center">
@@ -434,7 +434,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-orange-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(249,115,22,0.8)] pointer-events-none" id="p5-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p5-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
@@ -455,10 +455,10 @@
                 <div class="bg-black border border-zinc-800 overflow-hidden relative flex items-center justify-center w-full h-full" id="p6-container">
                     <svg viewBox="0 0 1920 1080" width="1920" height="1080" class="block max-w-full max-h-full opacity-0 pointer-events-none"></svg>
                     <div class="absolute bottom-1 right-1 z-20 transition-all duration-300 ease-out" id="p6-lp-wrapper">
-                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/85 hover:bg-zinc-800 backdrop-blur-md border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
+                        <div onpointerdown="startDrag(event, 6)" class="bg-zinc-900/35 hover:bg-zinc-800/50 backdrop-blur-[3px] border border-zinc-700/50 px-2 py-1.5 rounded-lg shadow-2xl transition group flex items-center gap-2.5 pointer-events-auto cursor-grab active:cursor-grabbing select-none touch-none w-fit">
                             <!-- Deck Master Interactive Counter -->
                             <div id="p6-dm-container" class="hidden relative shrink-0 cursor-pointer hover:scale-105 transition-transform" onpointerdown="handleDMClick(event, 6)" oncontextmenu="return false;" title="Left-click: +1 Counter | Right-click: -1 Counter">
-                                <img id="p6-dm-img" src="" class="w-14 h-14 rounded-sm border border-zinc-700/80 shadow-inner object-cover bg-zinc-950">
+                                <img id="p6-dm-img" src="" class="h-[82px] w-auto object-contain rounded-sm border border-zinc-700/80 shadow-inner bg-zinc-950">
                                 <div id="p6-dm-counter" class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-zinc-900 shadow transition-all duration-150">0</div>
                             </div>
                             <div class="flex flex-col justify-center">
@@ -482,7 +482,7 @@
                                     </div>
                                 </div>
                                 <div class="font-display text-5xl text-pink-500 leading-none tracking-wider drop-shadow-[0_0_10px_rgba(236,72,153,0.8)] pointer-events-none" id="p6-lp">8000</div>
-                                <div class="w-full h-1.5 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
+                                <div class="w-full h-3 bg-zinc-950 rounded-full mt-1.5 overflow-hidden pointer-events-none border border-zinc-800/80 shadow-inner">
                                     <div id="p6-lp-bar" class="h-full w-full transition-all duration-500 ease-out" style="background: hsl(120, 80%, 50%); box-shadow: 0 0 8px hsl(120, 80%, 50%);"></div>
                                 </div>
                             </div>
