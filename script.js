@@ -839,7 +839,12 @@ function toggleFlip(playerNum) {
 function changeBoxOpacity(playerNum, value) {
     const wrapper = document.getElementById(`p${playerNum}-lp-wrapper`);
     if (wrapper) {
-        wrapper.style.opacity = value;
+        // Target the draggable inner box, not the entire wrapper
+        const innerBox = wrapper.firstElementChild;
+        if (innerBox) {
+            // Apply the alpha value ONLY to the background color
+            innerBox.style.backgroundColor = `rgba(24, 24, 27, ${value})`;
+        }
     }
 }
 
