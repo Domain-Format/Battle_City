@@ -308,33 +308,43 @@ window.addEventListener('DOMContentLoaded', () => {
             if (videoEl) videoEl.srcObject = null;
             const placeholder = document.getElementById(`p${data.seat}-placeholder`);
             if (placeholder) {
-                placeholder.classList.remove('hidden');
-                placeholder.classList.add('flex');
-                const span = placeholder.querySelector('span');
-                if (span) span.textContent = 'Disconnected';
+        if (inviteRoom) {
+            const header = document.getElementById('right-panel-header');
+            if (header) {
+                header.innerHTML = `
+                    <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    JOIN INVITE
+                `;
+                header.classList.replace('text-cyan-400', 'text-emerald-400');
             }
-            addLog('System', `P${data.seat} dropped connection. Waiting for reconnect...`, 'text-amber-500');
-        });
-
-        socket.on('player-left', (data) => {
-            if (peerConnections[data.socketId]) {
-                peerConnections[data.socketId].close();
-                delete peerConnections[data.socketId];
-            }
-            freeGridSlot(data.socketId, data.seat);
-        });
-
-        socket.on('error', (msg) => {
-            addLog('System', `Server Error: ${msg}`, 'text-red-500 font-bold');
             
-            // Un-hide the setup modal so the user isn't stuck on a black screen!
-            const modal = document.getElementById('setup-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
+            // Hide standard host options for invited users
+            const hostOptions = document.getElementById('host-options');
+            if (hostOptions) hostOptions.classList.add('hidden');
 
-            const launchBtn = document.getElementById('launch-btn');
+            // Hide Lobby Filters
+            const lobbyFilters = document.getElementById('lobby-filters');
+            if (lobbyFilters) lobbyFilters.classList.add('hidden');
+
+            // Hide Room Name input and make Guest Name stretch full width
+        const roomNameContainer = document.getElementById('room-name-container');
+        if (roomNameContainer) roomNameContainer.classList.add('hidden');
+        
+        const nameConfigGrid = document.getElementById('name-config-grid');
+        if (nameConfigGrid) nameConfigGrid.classList.remove('md:grid-cols-2');
+
+        // Change the Left Panel Header from "Public Lobby" to "Room Invitation"
+        const leftHeader = document.querySelector('.md\\:w-7\\/12 h2');
+        if (leftHeader) {
+            leftHeader.innerHTML = `
+                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"></path></svg>
+                ROOM INVITATION
+            `;
+            leftHeader.classList.replace('text-cyan-400', 'text-emerald-400');
+        }
+        
+        // Change launch button to connect directly to the room
+        const launchBtn = document.getElementById('launch-btn');
             if (launchBtn) {
                 launchBtn.disabled = false;
                 if (launchBtn.innerText.includes('Connecting')) {
@@ -478,6 +488,39 @@ function updateLobbyUI(rooms) {
     
     lobbyList.innerHTML = '';
     
+    const urlParams = newSearchParams(window.location.search);
+    const inviteRoom = urlParams.get('room');
+
+    if (inviteRoom) {
+        const targetRoom = rooms.find(r => r.id === inviteRoom);
+        if (targetRoom) {
+            // Display a large, centered Invitation Card for the specific room
+            lobbyList.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-8 mt-10 border border-emerald-900/50 bg-emerald-950/20 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-emerald-300 bg-emerald-900/50 border border-emerald-700/50 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">${targetRoom.format} Format</span>
+                    </div>
+                    <div class="text-emerald-400 font-display text-4xl mb-1 tracking-widest uppercase">${targetRoom.roomName}</div>
+                    <div class="text-zinc-400 text-sm text-center mb-6">Hosted by <span class="text-white font-bold">${targetRoom.hostName}</span></div>
+                    <div class="flex gap-6 text-sm text-zinc-300 font-mono mb-4">
+                        <span class="flex items-center gap-2"><svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> ${targetRoom.currentPlayers}/${targetRoom.maxPlayers} Duelists</span>
+                        ${targetRoom.allowSpectators ? `<span class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Spectating Allowed</span>` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            // If the room is private (hidden from the server list), show a cool Invite Card!
+            lobbyList.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-8 mt-10 border border-emerald-900/50 bg-emerald-950/20 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                    <svg class="w-12 h-12 text-emerald-500 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+                    <div class="text-emerald-400 font-bold text-lg mb-1 tracking-widest uppercase">Private Room Invite</div>
+                    <div class="text-zinc-400 text-xs text-center">You have been invited to a private match.<br>Enter your name on the right and connect!</div>
+                </div>
+            `;
+        }
+        return;
+    }
+
     if (rooms.length === 0) {
         lobbyList.innerHTML = '<div class="text-zinc-500 italic text-center p-4 mt-10">No public rooms available right now. Host one!</div>';
         return;
