@@ -2,10 +2,10 @@
 
 STREAMING_CHUNK:Styling body and fonts... /
 body {
-font-family: 'Inter', sans-serif;
-background-color: #000000; / zinc-950 /
-color: #f4f4f5; / zinc-100
-overflow-x: hidden;
+    font-family: 'Inter', sans-serif;
+    background-color: #000000;
+    color: #f4f4f5;
+    overflow-x: hidden;
 }
 
 .font-display {
